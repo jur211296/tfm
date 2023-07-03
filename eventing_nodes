@@ -1,0 +1,546 @@
+### LIMPIAR ECOSISTEMA Y CONSUMO
+rm(list = ls(all.names = TRUE))
+gc()
+
+
+### CARGAR TODAS LAS LIBRERIAS QUE SE PODRIAN UTILIZAR
+library(ggplot2)
+require(ggrepel)
+require(jsonlite)
+library(readxl)
+library(rvest)
+library(dplyr)
+library(stringr)
+library(readxl)
+library(worldfootballR)
+library(magrittr)
+library(rlang)
+library(stringi)
+library(DBI)
+library(RMySQL)
+library(shiny)
+library(shinyWidgets)
+library(tidyr)
+library(grid)
+library(forcats)
+library(gridExtra)
+library(cowplot)
+library(shinydisconnect)
+library(shinycssloaders)
+library(ggtext)
+library(png)
+library(DT)
+library(lubridate)
+library(httr)
+library(magrittr)
+library(dplyr)
+library(jsonlite)
+library(plotly)
+library(ggimage)
+library(ggplot2)
+library(readxl)
+library(ggrepel)
+library(gridExtra)
+library(igraph)
+library(graphics)
+library(ggplot2)
+library(dplyr)
+library(plotly)
+library(geomtextpath)
+library(cowplot)
+
+OptaMAPcampofutbolblanco <- function(){
+  
+  #Creamos la plantilla del tema del gr?fico (esto es de soccermatics con algunos cambios)
+  theme_blankPitch = function(size=12) {
+    theme(
+      axis.text.x=element_blank(),
+      axis.text.y=element_blank(),
+      axis.ticks.length=unit(0, "lines"),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      legend.background=element_rect(fill="white", colour=NA),
+      legend.key=element_rect(colour="#000000",fill="white"),
+      legend.key.size=unit(1.2, "lines"),
+      legend.text=element_text(size=size),
+      legend.title=element_text(size=size, face="bold",hjust=0),
+      strip.background = element_rect(colour = "#000000", fill = "white", size = .5),
+      panel.background=element_rect(fill="white",colour="#000000"),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      panel.spacing=element_blank(),
+      plot.background=element_blank(),
+      plot.margin=unit(c(0, 0, 0, 0), "lines"),
+      plot.title=element_text(size=size*1.2),
+      strip.text.y=element_text(colour="#000000",size=size,angle=270),
+      strip.text.x=element_text(size=size*1))}
+  
+  ymin <- 0
+  xmin <- 0
+  
+  # Defining dimensions
+  GoalWidth <- 732
+  penspot <- 1100
+  boxedgeW <- 4032
+  boxedgeL <- 1650
+  box6yardW <- 1832
+  box6yardL <- 550
+  
+  ## dimensions calculations
+  # The 18 Yard Box
+  TheBoxWidth <- c(((7040 / 2) + (boxedgeW / 2)),((7040 / 2) - (boxedgeW / 2)))
+  TheBoxHeight <- c(boxedgeL,10600-boxedgeL)
+  GoalPosts <- c(((7040 / 2) + (GoalWidth / 2)),((7040 / 2) - (GoalWidth / 2)))
+  
+  # The 6 Yard Box
+  box6yardWidth <- c(((7040 / 2) + (box6yardW / 2)),((7040 / 2) - (box6yardW / 2)))
+  box6yardHeight <- c(box6yardL,10600-box6yardL)
+  
+  ## Centre circle dimensions
+  centreCirle_d <- 1830
+  
+  ## define the circle function
+  circleFun <- function(center = c(0,0),diameter = 1, npoints = 100){
+    r = diameter / 2
+    tt <- seq(0,2*pi,length.out = npoints)
+    xx <- center[1] + r * cos(tt)
+    yy <- center[2] + r * sin(tt)
+    return(data.frame(x = xx, y = yy))
+  }
+  
+  #### create leftD arc ####
+  Dleft <- circleFun(c((penspot),(7040/2)),centreCirle_d,npoints = 1000)
+  ## remove part that is in the box
+  Dleft <- Dleft[which(Dleft$x >= (boxedgeL)),]
+  
+  ## create rightD arc  ####
+  Dright <- circleFun(c((10600-(penspot)),(7040/2)),centreCirle_d,npoints = 1000)
+  ## remove part that is in the box
+  Dright <- Dright[which(Dright$x <= (10600-(boxedgeL))),]
+  
+  #### create center circle ####
+  center_circle <- circleFun(c((10600/2),(7040/2)),centreCirle_d,npoints = 100)
+  
+  ## create corner flag radius ####
+  TopLeftCorner <- circleFun(c(xmin,7040),200,npoints = 1000)
+  TopRightCorner <- circleFun(c(10600,7040),200,npoints = 1000)
+  BottomLeftCorner <- circleFun(c(xmin,ymin),200,npoints = 1000)
+  BottomRightCorner <- circleFun(c(10600,ymin),200,npoints = 1000)
+  
+  p <- ggplot() +
+    
+    xlim(c(-10,10600+10)) + ylim(c(-10,7040+10)) +
+    theme_blankPitch() +
+    geom_rect(aes(xmin=0, xmax=10600, ymin=0, ymax=7040), fill = "#269E26", colour = "#ffffff") +
+    geom_rect(aes(xmin=0, xmax=TheBoxHeight[1], ymin=TheBoxWidth[1], ymax=TheBoxWidth[2]), fill = "#269E26", colour = "#ffffff") +
+    geom_rect(aes(xmin=TheBoxHeight[2], xmax=10600, ymin=TheBoxWidth[1], ymax=TheBoxWidth[2]), fill = "#269E26", colour = "#ffffff") +
+    geom_rect(aes(xmin=0, xmax=box6yardHeight[1], ymin=box6yardWidth[1], ymax=box6yardWidth[2]), fill = "#269E26", colour = "#ffffff")  +
+    geom_rect(aes(xmin=box6yardHeight[2], xmax=10600, ymin=box6yardWidth[1], ymax=box6yardWidth[2]), fill = "#269E26", colour = "#ffffff")  +
+    geom_segment(aes(x = 10600/2, y = ymin, xend = 10600/2, yend = 7040),colour = "#ffffff") +
+    geom_path(data=Dleft, aes(x=x,y=y), colour = "#ffffff") +
+    geom_path(data=Dright, aes(x=x,y=y), colour = "#ffffff") +
+    geom_path(data=center_circle, aes(x=x,y=y), colour = "#ffffff") +
+    geom_point(aes(x = penspot , y = 7040/2), colour = "#ffffff") +
+    geom_point(aes(x = (10600-(penspot)) , y = 7040/2), colour = "#ffffff") +
+    geom_point(aes(x = (10600/2) , y = 7040/2), colour = "#ffffff") +
+    geom_segment(aes(x = xmin, y = GoalPosts[1], xend = xmin, yend = GoalPosts[2]),colour = "#ffffff", size = 1) +
+    geom_segment(aes(x = 10600, y = GoalPosts[1], xend = 10600, yend = GoalPosts[2]),colour = "#ffffff", size = 1)+
+    theme(legend.position="bottom")
+  
+  return(p)
+  
+}
+
+h <- OptaMAPcampofutbolblanco()
+
+killDbConnections <- function () {
+  
+  all_cons <- dbListConnections(MySQL())
+  
+  print(all_cons)
+  
+  for(con in all_cons)
+    +  dbDisconnect(con)
+  
+  print(paste(length(all_cons), " connections killed."))
+  
+}
+
+killDbConnections()
+
+### ACCESOS A MYSQL WORKBENCH PARA ALMACENAR BASES DE DATOSAA"
+mysqlconnection3 = dbConnect(RMySQL::MySQL(),
+                             dbname='Wyscout',
+                             host='localhost',
+                             port=3306,
+                             user='root',
+                             password='JuRgEn1996')
+
+### DAR PERMISOS PARA EDITAR EL SCHEMA EN MYSQL WORKBENCH
+dbSendQuery(mysqlconnection3, "SET GLOBAL local_infile = true;") 
+
+### VER TODAS LAS TABLAS QUE ACTUALMENTE TIENE EL SCHEMA
+#dbListTables(mysqlconnection3)
+
+dim_teams_matches <- dbGetQuery(mysqlconnection3,"SELECT * FROM dim_match_info")
+
+eventing_total <- readRDS("~/Desktop/BASES_FUTBOL/eventing_total.rds")
+
+eventing_total <- subset(eventing_total,select = -c(type.secondary,possession.types))
+
+eventing_pass <- filter(eventing_total, type.primary == 'pass')
+
+rm(eventing_total)
+
+eventing_pass_cruzado <- left_join(eventing_pass,dim_teams_matches,by = c("matchId" = "id"), keep = FALSE)
+
+rm(eventing_pass,dim_teams_matches)
+
+unique(eventing_pass_cruzado$competition)
+
+ligas = c('Spain. Segunda Divisi\xf3n')
+
+eventing_pass_cruzado <- eventing_pass_cruzado %>%
+  filter(competition %in% ligas)
+
+eventing_pass_cruzado <- subset(eventing_pass_cruzado,select = -c(matchTimestamp,videoTimestamp,type.primary,
+                                                                  team.formation,
+                                                                  opponentTeam.formation,player.id,
+                                                                  pass.recipient.id,shot.bodyPart,
+                                                                  shot.isGoal,shot.onTarget,shot.goalZone,
+                                                                  shot.xg,shot.postShotXg,shot.goalkeeperActionId,
+                                                                  shot.goalkeeper.id,shot.goalkeeper.name,
+                                                                  groundDuel.duelType,groundDuel.keptPossession,
+                                                                  groundDuel.progressedWithBall,
+                                                                  groundDuel.stoppedProgress,
+                                                                  groundDuel.recoveredPossession,groundDuel.takeOn,
+                                                                  groundDuel.side,groundDuel.relatedDuelId,
+                                                                  groundDuel.opponent.id,groundDuel.opponent.name,
+                                                                  groundDuel.opponent.position,aerialDuel.firstTouch,
+                                                                  aerialDuel.height,aerialDuel.relatedDuelId,
+                                                                  aerialDuel.opponent.id,aerialDuel.opponent.name,
+                                                                  aerialDuel.opponent.position,aerialDuel.opponent.height,
+                                                                  infraction.yellowCard,infraction.redCard,infraction.type,
+                                                                  infraction.opponent.id,infraction.opponent.name,
+                                                                  infraction.opponent.position,carry.progression,
+                                                                  carry.endLocation.x,carry.endLocation.y,possession.id,
+                                                                  possession.team.id,possession.team.formation,
+                                                                  possession.attack.withShot,possession.attack.withShotOnGoal,
+                                                                  possession.attack.withGoal,possession.attack.flank,
+                                                                  possession.attack.xg,shot.goalkeeper,teamA,teamB,
+                                                                  competitionId,seasonId))
+
+#Maestro de equipos únicos
+maestro_teams = eventing_pass_cruzado %>%
+  select(team.name,team.id) %>%
+  rename(team_name = team.name,team_id = team.id)
+
+maestro_teams1 = eventing_pass_cruzado %>%
+  select(opponentTeam.name,opponentTeam.id) %>%
+  rename(team_name = opponentTeam.name,team_id = opponentTeam.id)
+
+equipos <- bind_rows(maestro_teams,maestro_teams1) %>%
+  distinct()
+
+equipos$team_name <- stri_trans_general(equipos$team_name,"Latin-ASCII")
+
+### TRANSFORMAR COLUMNAS CON TEXTOS QUE INCLUYAN CARACTERES ESPECIALES
+eventing_pass_cruzado$team.name <- stri_trans_general(eventing_pass_cruzado$team.name,"Latin-ASCII")
+eventing_pass_cruzado$opponentTeam.name <- stri_trans_general(eventing_pass_cruzado$opponentTeam.name,"Latin-ASCII")
+eventing_pass_cruzado$player.name <- stri_trans_general(eventing_pass_cruzado$player.name,"Latin-ASCII")
+eventing_pass_cruzado$pass.recipient.name <- stri_trans_general(eventing_pass_cruzado$pass.recipient.name,"Latin-ASCII")
+eventing_pass_cruzado$possession.team.name <- stri_trans_general(eventing_pass_cruzado$possession.team.name,"Latin-ASCII")
+eventing_pass_cruzado$name <- stri_trans_general(eventing_pass_cruzado$name,"Latin-ASCII")
+eventing_pass_cruzado$competition <- stri_trans_general(eventing_pass_cruzado$competition,"Latin-ASCII")
+
+
+### CREAR TABLA CON EL EVENTING PASES EN MYSQL WORKBENCH A NIVEL LOCAL
+dbWriteTable(mysqlconnection3, value = eventing_pass_cruzado, row.names = FALSE, name = "eventing_pass", overwrite = TRUE)
+
+#################################### REDES DE PASES ####################################
+
+filtro_partidos = c('5361720')
+# 
+#GRAFICO DE NODOS
+#
+# Creamos los nodos
+#Minimo de pases para que muestre la flecha de red de pases por cada dupla de jugadores
+minimo_pases = 10
+
+#Equipos que se desean analizar (Ver team_id en tabla 'equipos')
+equipos_analizar =c('FC Andorra')
+
+#Seleccionar jugadores que se desean ver en el gráfico. Si se desea ver a todos COMENTAR.
+titulares = c('Raul Lizoain',
+              'Mika Marmol',
+              'Marc Aguado',
+              'Adria Vilanova',
+              'Diego Alende',
+              'Adria Altimira',
+              'H. Hevel',
+              'Carlos Martinez',
+              'Sergio Molina',
+              'C. Albanis',
+              'M. Bundu')
+
+eventing_pass_cruzado_2 <- eventing_pass_cruzado %>%
+  #filter(match_id %in% filtro_partidos) %>%
+  filter(team.name %in% equipos_analizar & seasonName == "2022/2023") 
+
+jugadores_data <- eventing_pass_cruzado %>%
+  #filter(matchId %in% filtro_partidos) %>%
+  filter(pass.accurate == TRUE & team.name %in% equipos_analizar & seasonName == "2022/2023") %>%
+  group_by(pass.recipient.name,pass.recipient.position,player.name,team.name) %>%
+  summarise(mean_x = mean(pass.endLocation.x), mean_y = (100-mean(pass.endLocation.y)), count_pass = n())
+jugadores_data <- subset( jugadores_data, select = c(mean_y,mean_x,count_pass,pass.recipient.name,pass.recipient.position,player.name,team.name))
+names(jugadores_data)[1:7] <- c("y","x","names","player_name","position","player_name2","team_name")
+
+# FILTRAR TITULARES -- Comentar si se quiere mostrar a todos los jugadores
+jugadores_data <- jugadores_data %>%
+  filter(player_name %in% titulares)
+jugadores_data <- jugadores_data %>%
+  filter(player_name2 %in% titulares)
+
+# Creamos los nodos
+jugadores_nodos<-jugadores_data %>%
+  group_by(player_name,team_name) %>%
+  summarise(x = round(mean(x),4), y = round(mean(y),4), total = sum(names))
+
+pases_totales<-sum((jugadores_data$names))
+
+jugadores_data_gk<-jugadores_data %>%
+  filter(position!="GK")
+
+# Me quedo con duplas de 2 o mas pases
+jugadores_data_gk<-jugadores_data_gk %>%
+  filter(names>minimo_pases)
+jugadores_nodos<-jugadores_nodos %>%
+  filter(total>minimo_pases)
+
+# valores para profundidad y amplitud
+j_x_max_prof<-max(jugadores_data_gk$x)*106
+j_x_min_prof<-min(jugadores_data_gk$x)*106
+j_y_max_ampl<-max(jugadores_data_gk$y)*70.5
+j_y_min_ampl<-min(jugadores_data_gk$y)*70.5
+
+j_hull_coor <- jugadores_data_gk %>%
+  slice(chull(x,y)) %>%
+  mutate(hull1= 1)
+
+j_centro_pol<-jugadores_data_gk %>%
+  summarise(xm=mean(x),ym=mean(y))
+
+j_grafo<-jugadores_data %>%
+  select(player_name,player_name2,names,team_name)
+
+names(j_grafo)<- c('position','to','from','pases','equipo')
+
+j_grafo<-filter(j_grafo,pases>=minimo_pases)
+
+#creamos el grafo que permite sacar metricas
+j_Colleague_Graph_kedges=igraph::graph.data.frame(j_grafo, directed=TRUE)
+
+#simplificamos los looping (es raro que haya pero alguno he visto) y las multiplicidades
+j_Colleague_Graph_kedges_d<-igraph::simplify(j_Colleague_Graph_kedges, remove.multiple=TRUE, remove.loops=TRUE)
+
+#Calculamos la densidad del grafo
+
+j_densidad<-igraph::graph.density(j_Colleague_Graph_kedges_d,loop=FALSE)
+j_media<-igraph::mean_distance(j_Colleague_Graph_kedges_d,directed=FALSE,unconnected=TRUE)
+j_parejas_combinadas<-dyad_census(j_Colleague_Graph_kedges_d)$mut
+j_parejas_1combinadas<-dyad_census(j_Colleague_Graph_kedges_d)$asym
+j_parejas_sincombinadas<-dyad_census(j_Colleague_Graph_kedges_d)$null
+j_triangulacion<-transitivity(j_Colleague_Graph_kedges_d, type="global")
+j_grado=degree(j_Colleague_Graph_kedges_d, mode="all")
+j_centralidad<-closeness(j_Colleague_Graph_kedges_d, mode="all")
+j_eigenvector<-centr_eigen(j_Colleague_Graph_kedges_d, directed=T, normalized=T)$vector
+j_hs <- hub_score(j_Colleague_Graph_kedges_d, weights=NA)$vector
+j_as <- authority_score(j_Colleague_Graph_kedges_d, weights=NA)$vector
+
+#Calculamos la centralidad de cada jugador
+j_bet<-igraph::betweenness(j_Colleague_Graph_kedges_d,directed = TRUE,normalized = TRUE)
+j_bet2 <- as.data.frame(j_bet)
+j_bet3 <- cbind(Label = rownames(j_bet2), j_bet2)
+j_bet3[,'Label'] <- as.character(j_bet3[,'Label'])
+
+#unimos a los nodos el valor de la centralidad
+jugadores_nodos$total<-as.numeric(jugadores_nodos$total)
+j_knodes10 <- jugadores_nodos %>%
+  ungroup() %>%
+  mutate(j_size = scales::rescale(total, c(1,5), c(min(total), max(total)))) %>%
+  left_join(j_bet3, by = c("player_name"="Label"))
+
+j_curva<-jugadores_data %>%
+  left_join(j_knodes10,by=c("player_name"="player_name"))%>%
+  mutate(x = x.y) %>%
+  mutate(y = y.y) %>%
+  group_by(player_name,player_name2,team_name.x) %>%
+  summarise(avg_x=mean(x),avg_y=mean(y),to=sum(as.integer(names)))
+
+j_curva<-j_curva %>%
+  select(player_name,team_name.x,avg_x,avg_y,player_name2,to) %>%
+  filter(to>minimo_pases) %>%
+  inner_join(jugadores_nodos,by=c('player_name2'='player_name'))  %>%
+  mutate(j_size2 = scales::rescale(to, c(0.1, 2), c(min(to), max(to))))
+
+segmentsDf <- function(data, shorten.start, shorten.end, offset){
+
+  data$dx = data$x - data$avg_x
+  data$dy = data$y - data$avg_y
+  data$dist = sqrt( data$dx^2 + data$dy^2 )
+  data$px = data$dx/data$dist
+  data$py = data$dy/data$dist
+
+
+  data$x2 = data$avg_x + data$px * shorten.start
+  data$y2 = data$avg_y + data$py * shorten.start
+  data$xend = data$x - data$px * shorten.end
+  data$yend = data$y - data$py * shorten.end
+  data$x2 = data$x2 - data$py * offset
+  data$xend = data$xend - data$py * offset
+  data$y2 = data$y2 + data$px * offset
+  data$yend = data$yend + data$px * offset
+
+  data<-data.frame(data)
+
+  return(data)
+}
+
+j_curva <- j_curva %>%
+  segmentsDf(2,2, 1)
+
+j_arrow <- arrow(type = "closed", angle = 30, length = unit(0.05, "inches"))
+
+gr <- list()
+k=1
+
+#Este FOR es para que genere un grafico por cada uno de los equipos seleccionados
+for (team in unique(j_curva$team_name)) {
+  j_curva1 <- j_curva %>%
+    filter(team_name.x == team)
+  j_hull_coor1 <- j_hull_coor %>%
+    filter(team_name == team)
+  j_knodes101 <- j_knodes10 %>%
+    filter(team_name == team)
+
+  #Dibujamos el grafico
+  p <- h +
+    #geom_polygon(j_hull_coor1, mapping=aes(x= x*106, y=y*70.5), alpha = 0.4,linetype = "dashed",size = 1,show.legend = FALSE) +
+    #geom_point(data = j_centro_pol,aes(x = xm*106,y =ym*70.5),shape = 21, colour = "black", size = 5, stroke = 5) +
+    #geom_segment(data=j_centro_pol,aes(x = xm*106, y = ym*70.5, xend = 0, yend = 7050/2),colour = "#000000", size = 1) +
+    #geom_text(data = j_centro_pol,aes(x = (xm*106)/2,y =(ym-5)*70.5,label=format(sqrt((xm*1.06-0)^2+(ym*0.75-35.2)),digits=2,nsmall=2)), colour="black") +
+
+    #Dibuja las flechas
+    #    geom_segment(data = curva, aes(x = xend*106, y =(yend*70.5), xend = x2*106, yend =( y2*70.5), size = size2,color=to), arrow = arrow, alpha = 1) +
+    geom_segment(data = j_curva1, aes(x = x2*106, y =(y2*70.5), xend = xend*106, yend =( yend*70.5), size = j_size2*2,color=to), arrow = j_arrow, alpha = 1) +
+
+    #Cambia el color y forma de las flechas
+    scale_color_gradient(low = "white", high = "red")+
+    geom_point(data = j_knodes101,aes(x = x*106,y = (y*70.5),size = j_size*2,fill=j_bet),color='black',shape=21,stroke = 1) +
+
+    #Dibuja los puntos
+    ggrepel::geom_label_repel(
+      data = j_knodes101,
+      aes(x = x*106,y = (y*70.5),label=player_name),
+      nudge_y = 400,
+      size=4) +
+
+    # geom_segment(aes(x = j_x_min_prof, y = 6900, xend = j_x_max_prof, yend = 6900),colour = "#000000", size = 1) +
+    # geom_segment(aes(x = j_x_min_prof, y = 7025, xend = j_x_min_prof, yend = 6775),colour = "#000000", size = 1) +
+    # geom_segment(aes(x = j_x_max_prof, y = 7025, xend = j_x_max_prof, yend = 6775),colour = "#000000", size = 1) +
+    # geom_text(aes(x=(j_x_max_prof-j_x_min_prof)/2+j_x_min_prof,y=6725,label=format((j_x_max_prof-j_x_min_prof)/100,digits=2,nsmall=2)), colour="black") +
+
+
+    # geom_segment(aes(x = 9650, y = j_y_min_ampl, xend = 9650, yend = j_y_max_ampl),colour = "#000000", size = 1) +
+    # geom_segment(aes(x = 9525, y = j_y_min_ampl, xend = 9725, yend = j_y_min_ampl),colour = "#000000", size = 1) +
+    # geom_segment(aes(x = 9525, y = j_y_max_ampl, xend = 9725, yend = j_y_max_ampl),colour = "#000000", size = 1) +
+    # geom_text(aes(x=9450,y=(j_y_min_ampl-j_y_max_ampl)/2+j_y_max_ampl,label=format((j_y_max_ampl-j_y_min_ampl)/100,digits=2,nsmall=2)), colour="black") +
+
+  scale_size_identity() +
+
+    # annotate("text", label = paste("Pases Totales en Matriz: ",pases_totales), x = 100, y = 200, size = 5, colour = "black",hjust = 0)+
+    # annotate("text", label = paste("Densidad del grafo: ",format(j_densidad, digits=2, nsmall=2)), x = 100, y = 500, size = 5, colour = "black",hjust = 0)+
+    # annotate("text", label = paste("Duplas combinadas: ",format(j_parejas_combinadas, digits=1, nsmall=2)), x = 100, y = 800, size = 5, colour = "black",hjust = 0)+
+    # annotate("text", label = paste("Duplas monodirigidas: ",format(j_parejas_1combinadas, digits=1, nsmall=2)), x = 100, y = 1100, size = 5, colour = "black",hjust = 0)+
+    # annotate("text", label = paste("Duplas sin combinacion: ",format(j_parejas_sincombinadas, digits=1, nsmall=2)), x = 100, y = 1400, size = 5, colour = "black",hjust = 0)+
+    # annotate("text", label = paste("Triangulacion: ",format(j_triangulacion, digits=1, nsmall=2)), x = 100, y = 1700, size = 5, colour = "black",hjust = 0)+
+    theme(legend.position="none")
+
+  #Almacenamos los graficos en un vector para despues mostrar todos los graficos juntos
+  gr[[k]] <- p
+  k=k+1
+}
+
+#Esto es para visualizar varios graficos de una
+# Cambiar el ncol (numero de columnas) dependiendo de cuantos graficos se mostraran
+g3 <- gridExtra::grid.arrange(grobs = gr, ncol = 1, as.table = TRUE)
+
+#Esto no se para que es
+g4 <- cowplot::ggdraw(g3) +
+  theme(plot.background = element_rect(fill = "black", color = NA))
+
+g4
+
+#################################### REDES DE PASES ####################################
+
+#filtro_partidos = c('80854')
+
+#GRAFICO DE NODOS
+
+#equipos_analizar =c('Borussia Dortmund')
+#Equipos que se desean analizar (Ver team_id en tabla 'equipos')
+
+# jugadores_data <- eventing_pass_cruzado %>%
+#   #filter(match_id %in% filtro_partidos) %>%
+#   filter(pass.accurate == TRUE) %>%
+#   group_by(seasonName,competition,date,name,team.name,pass.recipient.name,player.name) %>%
+#   summarise(mean.end.x = mean(pass.endLocation.x), mean.end.y = (100-mean(pass.endLocation.y)), mean.start.x = mean(location.x), mean.start.y = (100-mean(location.y)), count_pass = n())
+# jugadores_data <- subset( jugadores_data, select = c(seasonName,competition,date,name,team.name,pass.recipient.name,mean.end.x,mean.end.y,player.name,mean.start.x,mean.start.y,count_pass))
+# names(jugadores_data)[1:12] <- c("temporada","liga","fecha","partido","equipo","receptor","x.receptor","y.receptor","pasador","x.pasador","y.pasador","pases")
+# 
+# # Creamos los nodos
+# jugadores_nodos<-jugadores_data %>%
+#   group_by(temporada,liga,fecha,partido,equipo,receptor) %>%
+#   summarise(x.receptor = round(mean(x.receptor),4), y.receptor = round(mean(y.receptor),4), total = sum(pases))
+# 
+# j_grafo<-jugadores_data %>%
+#   select(temporada,liga,fecha,partido,equipo,receptor,pasador,pases)
+# 
+# #unimos a los nodos el valor de la centralidad
+# jugadores_nodos$total<-as.numeric(jugadores_nodos$total)
+# j_knodes10 <- jugadores_nodos %>%
+#   ungroup() %>%
+#   mutate(j_size = scales::rescale(total, c(1,5), c(min(total), max(total)))) 
+# 
+# # columns to paste together
+# cols1 <- c( 'temporada','liga','fecha','partido','equipo','receptor')
+# cols2 <- c( 'temporada','liga','fecha','partido','equipo','pasador')
+# 
+# # create a new column `x` with the three columns collapsed together
+# jugadores_data$conc_receptor <- apply( jugadores_data[ , cols1 ] , 1 , paste , collapse = "-" )
+# jugadores_data$conc_pasador <- apply( jugadores_data[ , cols2 ] , 1 , paste , collapse = "-" )
+# j_knodes10$conc_receptor <- apply( j_knodes10[ , cols1 ] , 1 , paste , collapse = "-" )
+# jugadores_nodos$conc_receptor <- apply( jugadores_nodos[ , cols1 ] , 1 , paste , collapse = "-" )
+# 
+# j_curva<-jugadores_data %>%
+#   select(temporada,liga,fecha,partido,equipo,receptor,pasador,pases,conc_receptor,conc_pasador) %>%
+#   left_join(select(j_knodes10, c(conc_receptor,x.receptor,y.receptor,j_size)),by=c("conc_receptor"="conc_receptor"))%>%
+#   left_join(select(j_knodes10, c(conc_receptor,x.receptor,y.receptor)),by=c("conc_pasador"="conc_receptor")) %>%
+#   select(temporada,liga,fecha,partido,equipo,receptor,x.receptor.x,y.receptor.x,pasador,x.receptor.y,y.receptor.y,pases,j_size)
+# 
+# names(j_curva)[1:13] <- c("temporada","liga","fecha","partido","equipo","receptor","posicionMediaX1","posicionMediaY1","pasador","posicionMediaX2","posicionMediaY2","pases","tamaño")
+# 
+# j_curva2 <- j_curva
+# j_curva$Tabla <- "Inicio"
+# j_curva2$Tabla <- "Final"
+# j_curva$posicionMediaX <- j_curva$posicionMediaX1
+# j_curva$posicionMediaY <- j_curva$posicionMediaY1
+# j_curva2$posicionMediaX <- j_curva$posicionMediaX2
+# j_curva2$posicionMediaY <- j_curva$posicionMediaY2
+# 
+# base_final <- rbind(j_curva,j_curva2)
+# 
+# rm(j_curva,j_grafo,j_knodes10,jugadores_data,jugadores_nodos,maestro_teams,maestro_teams1,
+#    eventing_pass_cruzado,j_curva2)
+# 
+# dbWriteTable(mysqlconnection3, value = base_final, row.names = FALSE, name = "eventing_pass_nodes_big7", overwrite = TRUE)
