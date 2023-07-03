@@ -1,0 +1,1537 @@
+### LIMPIAR ECOSISTEMA Y CONSUMO
+rm(list = ls(all.names = TRUE))
+gc()
+
+
+### CARGAR TODAS LAS LIBRERIAS QUE SE PODRIAN UTILIZAR
+library(ggplot2)
+require(ggrepel)
+require(jsonlite)
+library(readxl)
+library(rvest)
+library(dplyr)
+library(stringr)
+library(readxl)
+library(worldfootballR)
+library(magrittr)
+library(rlang)
+library(stringi)
+library(DBI)
+library(RMySQL)
+library(shiny)
+library(shinyWidgets)
+library(tidyr)
+library(grid)
+library(forcats)
+library(gridExtra)
+library(cowplot)
+library(shinydisconnect)
+library(shinycssloaders)
+library(ggtext)
+library(png)
+library(DT)
+library(lubridate)
+
+### ACCESOS A MYSQL WORKBENCH PARA ALMACENAR BASES DE DATOSAA"
+mysqlconnection2 = dbConnect(RMySQL::MySQL(),
+                             dbname='big7',
+                             host='localhost',
+                             port=3306,
+                             user='root',
+                             password='jurgen96')
+
+### DAR PERMISOS PARA EDITAR EL SCHEMA EN MYSQL WORKBENCH
+dbSendQuery(mysqlconnection2, "SET GLOBAL local_infile = true;") 
+
+### VER TODAS LAS TABLAS QUE ACTUALMENTE TIENE EL SCHEMA
+dbListTables(mysqlconnection2)
+
+con_tfm = dbConnect(RMySQL::MySQL(),
+                             dbname='tfm',
+                             host='localhost',
+                             port=3306,
+                             user='root',
+                             password='jurgen96')
+
+### DAR PERMISOS PARA EDITAR EL SCHEMA EN MYSQL WORKBENCH
+dbSendQuery(con_tfm, "SET GLOBAL local_infile = true;") 
+
+### VER TODAS LAS TABLAS QUE ACTUALMENTE TIENE EL SCHEMA
+dbListTables(con_tfm)
+
+### SELECCIONAR LOS URLs DE LAS LIGAS QUE SE DESEAN ACTUALIZAR
+url_premier_2023 = fb_league_urls(country = "ENG" , gender = "M", season_end_year = 2023, tier = '1st')
+url_premier_2022 = fb_league_urls(country = "ENG" , gender = "M", season_end_year = 2022, tier = '1st')
+url_premier_2021 = fb_league_urls(country = "ENG" , gender = "M", season_end_year = 2021, tier = '1st')
+# url_premier_2020 = fb_league_urls(country = "ENG" , gender = "M", season_end_year = 2020, tier = '1st')
+# url_premier_2019 = fb_league_urls(country = "ENG" , gender = "M", season_end_year = 2019, tier = '1st')
+url_laliga_2023 = fb_league_urls(country = "ESP" , gender = "M", season_end_year = 2023, tier = '1st')
+url_laliga_2022 = fb_league_urls(country = "ESP" , gender = "M", season_end_year = 2022, tier = '1st')
+url_laliga_2021 = fb_league_urls(country = "ESP" , gender = "M", season_end_year = 2021, tier = '1st')
+# url_laliga_2020 = fb_league_urls(country = "ESP" , gender = "M", season_end_year = 2020, tier = '1st')
+# url_laliga_2019 = fb_league_urls(country = "ESP" , gender = "M", season_end_year = 2019, tier = '1st')
+url_ligue1_2023 = fb_league_urls(country = "FRA" , gender = "M", season_end_year = 2023, tier = '1st')
+url_ligue1_2022 = fb_league_urls(country = "FRA" , gender = "M", season_end_year = 2022, tier = '1st')
+url_ligue1_2021 = fb_league_urls(country = "FRA" , gender = "M", season_end_year = 2021, tier = '1st')
+# url_ligue1_2020 = fb_league_urls(country = "FRA" , gender = "M", season_end_year = 2020, tier = '1st')
+# url_ligue1_2019 = fb_league_urls(country = "FRA" , gender = "M", season_end_year = 2019, tier = '1st')
+url_bundesliga_2023 = fb_league_urls(country = "GER" , gender = "M", season_end_year = 2023, tier = '1st')
+url_bundesliga_2022 = fb_league_urls(country = "GER" , gender = "M", season_end_year = 2022, tier = '1st')
+url_bundesliga_2021 = fb_league_urls(country = "GER" , gender = "M", season_end_year = 2021, tier = '1st')
+# url_bundesliga_2020 = fb_league_urls(country = "GER" , gender = "M", season_end_year = 2020, tier = '1st')
+# url_bundesliga_2019 = fb_league_urls(country = "GER" , gender = "M", season_end_year = 2019, tier = '1st')
+url_seriea_2023 = fb_league_urls(country = "ITA" , gender = "M", season_end_year = 2023, tier = '1st')
+url_seriea_2022 = fb_league_urls(country = "ITA" , gender = "M", season_end_year = 2022, tier = '1st')
+url_seriea_2021 = fb_league_urls(country = "ITA" , gender = "M", season_end_year = 2021, tier = '1st')
+# url_seriea_2020 = fb_league_urls(country = "ITA" , gender = "M", season_end_year = 2020, tier = '1st')
+# url_seriea_2019 = fb_league_urls(country = "ITA" , gender = "M", season_end_year = 2019, tier = '1st')
+url_eredivisie_2023 = fb_league_urls(country = "NED" , gender = "M", season_end_year = 2023, tier = '1st')
+url_eredivisie_2022 = fb_league_urls(country = "NED" , gender = "M", season_end_year = 2022, tier = '1st')
+url_eredivisie_2021 = fb_league_urls(country = "NED" , gender = "M", season_end_year = 2021, tier = '1st')
+# url_eredivisie_2020 = fb_league_urls(country = "NED" , gender = "M", season_end_year = 2020, tier = '1st')
+# url_eredivisie_2019 = fb_league_urls(country = "NED" , gender = "M", season_end_year = 2019, tier = '1st')
+url_primeriraliga_2023 = fb_league_urls(country = "POR" , gender = "M", season_end_year = 2023, tier = '1st')
+url_primeriraliga_2022 = fb_league_urls(country = "POR" , gender = "M", season_end_year = 2022, tier = '1st')
+url_primeriraliga_2021 = fb_league_urls(country = "POR" , gender = "M", season_end_year = 2021, tier = '1st')
+# url_primeriraliga_2020 = fb_league_urls(country = "POR" , gender = "M", season_end_year = 2020, tier = '1st')
+# url_primeriraliga_2019 = fb_league_urls(country = "POR" , gender = "M", season_end_year = 2019, tier = '1st')
+
+### SELECCIONAR LOS TIPOS DE ESTADÍSTICAS QUE SE DESEAN ACTUALIZAR
+stats_types = c("standard", "shooting", "passing", "passing_types", "gca", "defense", "possession","playing_time", "misc")
+
+### SELECCIONAR LIGAS PARA ESTA ACTUALIZACIÓN DEPENDIENDO DE LA CANTIDAD DE EQUIPOS DE CADA LIGA
+URLs18 = c(url_bundesliga_2023,url_eredivisie_2023,url_primeriraliga_2023)
+URLs20 = c(url_seriea_2023,url_ligue1_2023,url_premier_2023,url_laliga_2023)
+
+### LIMPIAR LAS LIGAS PARA QUE SOLO CONTENGAN A LOS EQUIPOS QUE ESTUVIERON EN PRIMERA (QUITAR REPESCAS)
+# Crear un bucle para eliminar los equipos que no correspondan
+i = 1
+equipos_liga = c()
+for (i in 1:length(URLs18)) {
+  equipos_liga_1 = fb_teams_urls(URLs18[[i]])
+  if (length(equipos_liga_1) > 18) {
+    if (length(equipos_liga_1) == 19) {
+      equipos_liga_1 <- equipos_liga_1[-c(19)]
+      print(equipos_liga_1)
+    } else {
+      dif = length(equipos_liga_1) - 19
+      equipos_liga_1 <- equipos_liga_1[-c(19:(19 + dif))]
+      print(equipos_liga_1)
+    }
+  } else {
+    print(equipos_liga_1)
+  }
+  equipos_liga = c(equipos_liga,equipos_liga_1)
+  print(length(equipos_liga))
+  i = i + 1
+}
+for (i in 1:length(URLs20)) {
+  equipos_liga_1 = fb_teams_urls(URLs20[[i]])
+  if (length(equipos_liga_1) > 20) {
+    if (length(equipos_liga_1) == 21) {
+      equipos_liga_1 <- equipos_liga_1[-c(21)]
+      print(equipos_liga_1)
+    } else {
+      dif = length(equipos_liga_1) - 21
+      equipos_liga_1 <- equipos_liga_1[-c(21:(21 + dif))]
+      print(equipos_liga_1)
+    }
+  } else {
+    print(equipos_liga_1)
+  }
+  equipos_liga = c(equipos_liga,equipos_liga_1)
+  print(length(equipos_liga))
+  i = i + 1
+}
+
+### CREAR UN BUCLE PARA ACTUALIZAR LA INFORMACIÓN ACUMULADA POR CADA LIGA Y POR CADA TIPO DE ESTADÍSTICA ESPECIFICADA
+j=1
+k=1
+# primer bucle es para recorrer liga por liga
+for (j in 1:length(equipos_liga)) {
+  # Hago un print de que número de liga se esta actualizando para ver el avance
+  print(equipos_liga[j])
+  Sys.sleep(60)
+  # segundo bucle es para recorrer cada tipo de estadística dentro de cada liga
+  for (k in 1:length(stats_types)) {
+    # creo una tabla donde almaceno la info de la liga que toca y el tipo de estadística que toca
+    a = fb_team_player_stats(team_urls=equipos_liga[j], stat_type= stats_types[k])
+    # creo una llave en la tabla para referenciar de manera única a cada jugador
+    a$Llave <- paste(a$PlayerURL," / ",a$Season)
+    # creo una condicion para concatenar los tipos de stats. primer registro: no concatena. segundo registro: concatena el primero y el segundo
+    # resto de registros: concatenado previo y el registro que toca
+    if (k == 1) {
+      # por ser primer registro no concatena. base = a.
+      base = a
+      # Hago un print de que tipo de estadística se esta actualizando para ver el avance
+      print(stats_types[k])
+    } else {
+      if (k == 2) {
+        # por ser segundo registro se concatena el primer y segundo registro. base = base + a.
+        base <- merge(x=base,y=a,by="Llave",all.x=TRUE)
+        # Hago un print de que tipo de estadística se esta actualizando para ver el avance
+        print(stats_types[k])
+        # elimino columnas que pueden causar problemas porque se repiten. por ser segundo registro la tabla les agrega una .x y .y
+        base <- subset( base, select = -c(Season.y,Squad.y,Comp.y,Player.y,Nation.y,Pos.y,Age.y,PlayerURL.y))
+      } else {
+        # por ser tercer y mas registro se concatena el primer y segundo registro. base = base + a.
+        base <- merge(x=base,y=a,by="Llave",all.x=TRUE)
+        # Hago un print de que tipo de estadística se esta actualizando para ver el avance
+        print(stats_types[k])
+        # elimino columnas que pueden causar problemas porque se repiten. por ser segundo registro la tabla los asigna sin .x ni .y
+        base <- subset( base, select = -c(Season,Squad,Comp,Player,Nation,Pos,Age,PlayerURL))
+      }
+    }
+    k = k + 1
+  }
+  # creo una condicion para concatenar las ligas. primer registro: no concatena. segundo registro: concatena el concatenado previo y el siguiente
+  if (j == 1) {
+    # si es la primera liga, no concatena. base_final = base.
+    base_final = base
+  } else {
+    # si no es la primera liga, concatena. base_final = base_final previa + base.
+    base_final = bind_rows(base_final,base)
+  }
+  j = j + 1
+}
+
+### LIMPIAR LA BASE FINAL
+
+### CAMBIAR TÍTULOS DE COLUMNAS
+names(base_final)<- c("PlayerURL_Season","Season","Team","Competition","Player_Name","Country","Position","Age",
+                      "MP","Msta","MinTot","Min90s","G","AG","GI","npG","pSco","pSh","YC","RC","xG","npxG","xAG","npxGI",
+                      "PrgC_Progression","PrgP_Progression","PrgR_Progression",
+                      "Gper90","AGper90","GIper90","npGper90","npGIper90","xGper90","xAGper90","xGIper90",
+                      "npxGper90","npxGIper90","PlayerURL","Min90s2","G2","Sh","SoT","SoT_percent_Standard",
+                      "Sh_per_90_Standard","SoT_per_90_Standard","G_per_Sh_Standard","G_per_SoT_Standard","SoTAvgDis",
+                      "FK","PK_Standard","PKatt_Standard","xG_Expected.y","npxG_Expected.y","npxG_per_Sh_Expected",
+                      "G_minus_xG_Expected","npxG_minus_xG_Expected","Mins_Per_90.y","PasCmp","PasAtt","Cmp_percent_Total",
+                      "PasTotDis","PasPrgDis","PasShrCmp","PasShrAtt","Cmp_percent_Short","PasMdmCmp","PasMdmAtt",
+                      "Cmp_percent_Medium","PasLngCmp","PasLngAtt","Cmp_percent_Long","Ast.y","xAG2","xA","A_minus_xAG",
+                      "KP","PasOff3rd","PPA","CroPA","PasPrgCmp","Mins_Per_90.x.1","PasAtt2","PasAliBall","PasDeaBall",
+                      "PasFk","PasDee","PasChgOvr","PasDiag","PasTI","CK_Pass_Types","CkIns","CkOut","CkStr","PasCmp2",
+                      "PasOfs","PasBlo","Mins_Per_90.y.1","SCA","SCAper90","PreShPasAliBal","PreShPasDeaBal","PreShDri",
+                      "PreShSh","PreShFou","PreShDefAct","GCA","GCAper90","PreGPasAliBal","PreGPasDeaBal","PreGDri","PreGSh",
+                      "PreGFou","PreGDefAct","Mins_Per_90.x.2","Tkl","TklW","TklDef3rd","TklMed3rd","TklOff3rd","TklDriA",
+                      "DriAAtt","Tklperc","DriACmp","Blk","BlkSh","BlkPas","Int","TklandInt","Clr","PreShAErr",
+                      "Mins_Per_90.y.2","Tch","TchOPA","TchDef3rd","TchMed3rd","TchOff3rd","TchPA","TchAliBall","DriCmp",
+                      "DriAtt","Succ_percent_Dribbles","Mis_Dribbles","Mis_Dribbles_Perc","Carries","Dis_Dribbles",
+                      "ProgDiscarries","PrgC_Carries","Off3rdCarries","CPA_Carries","MisCarries","DisCarries",
+                      "PasRec","PasPrgRec","MP.y",
+                      "Min_Playing_Time.y","Mn_per_MP_Playing_Time","MinPerc","Mins_Per_90_Playing_Time.y","Starts_Starts",
+                      "MinPerMSta","MPCmp","MBch","MinPerMBch","MBchNotP","onPPM","onG","onGA","onGD","onGNetPer90",
+                      "OnOffNetPer90","onxG","onxGA","onxGD","onxGNetPer90","OnOffxNetPer90","Mins_Per_90.x.3","CrdY.y",
+                      "CrdR.y","YCTwo","Fls","FlsA","Ofs","Crs2","Int2","TklW2","PkW","PkCon","OwnG","RcvLostBalls","ADW",
+                      "ADL","Won_percent_Aerial_Duels","MP_Playing_Time.x","MP_Playing_Time.y")
+
+### ELIMINAR COLUMNAS QUE NO SE DESEAN
+base_final <- subset( base_final, select = -c(ProgDiscarries,PrgC_Carries,Off3rdCarries,CPA_Carries,MisCarries,DisCarries,Carries,DisCarries,Mis_Dribbles_Perc,Competition,Age,GI,PrgC_Progression,PrgP_Progression,PrgR_Progression,Gper90,AGper90,GIper90,npGper90,npGIper90,xGper90,xAGper90,xGIper90,npxGper90,npxGIper90,Min90s2,G2,SoT_percent_Standard,Sh_per_90_Standard,SoT_per_90_Standard,G_per_Sh_Standard,G_per_SoT_Standard,PK_Standard,PKatt_Standard,xG_Expected.y,npxG_Expected.y,npxG_per_Sh_Expected,G_minus_xG_Expected,npxG_minus_xG_Expected,Mins_Per_90.y,Cmp_percent_Total,Cmp_percent_Short,Cmp_percent_Medium,Cmp_percent_Long,Ast.y,xAG2,A_minus_xAG,Mins_Per_90.x.1,PasAtt2,CK_Pass_Types,PasCmp2,Mins_Per_90.y.1,SCAper90,GCAper90,Mins_Per_90.x.2,Tklperc,TklandInt,Mins_Per_90.y.2,Succ_percent_Dribbles,Mis_Dribbles,Dis_Dribbles,MP.y,Min_Playing_Time.y,Mn_per_MP_Playing_Time,Mins_Per_90_Playing_Time.y,Starts_Starts,Mins_Per_90.x.3,CrdY.y,CrdR.y,Crs2,Int2,TklW2,Won_percent_Aerial_Duels,MP_Playing_Time.x,MP_Playing_Time.y) )
+
+### FILTRAR FUERA A LOS PORTEROS (decision propia)
+base_final <- filter(base_final, Position != 'GK')
+
+### RELLENAR NAs A 0
+base_final[is.na(base_final)] = 0
+
+### CREAR NUEVAS COLUMNAS, REDONDEAR A DOS DECIMALES Y RELLENAR INFINITOS Y NAs A 0
+base_final$Min90s <- base_final$MinTot / 90
+base_final$Min90s <- round(base_final$Min90s,digits=2)
+base_final$Min90s <- ifelse(is.infinite(base_final$Min90s), NA, base_final$Min90s)
+base_final[is.na(base_final)] = 0
+
+base_final$MinPerMP <- base_final$MinTot / base_final$MP
+base_final$MinPerMP <- round(base_final$MinPerMP,digits=2)
+base_final$MinPerMP <- ifelse(is.infinite(base_final$MinPerMP), NA, base_final$MinPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$YCPer90 <- base_final$YC / base_final$Min90s
+base_final$YCPer90 <- round(base_final$YCPer90,digits=2)
+base_final$YCPer90 <- ifelse(is.infinite(base_final$YCPer90), NA, base_final$YCPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$FlsPer90 <- base_final$Fls / base_final$Min90s
+base_final$FlsPer90 <- round(base_final$FlsPer90,digits=2)
+base_final$FlsPer90 <- ifelse(is.infinite(base_final$FlsPer90), NA, base_final$FlsPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$FlsAPer90 <- base_final$FlsA / base_final$Min90s
+base_final$FlsAPer90 <- round(base_final$FlsAPer90,digits=2)
+base_final$FlsAPer90 <- ifelse(is.infinite(base_final$FlsAPer90), NA, base_final$FlsAPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$OfsPer90 <- base_final$Ofs / base_final$Min90s
+base_final$OfsPer90 <- round(base_final$OfsPer90,digits=2)
+base_final$OfsPer90 <- ifelse(is.infinite(base_final$OfsPer90), NA, base_final$OfsPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$npGPerc <- base_final$npG / base_final$G
+base_final$npGPerc <- round(base_final$npGPerc,digits=2)
+base_final$npGPerc <- ifelse(is.infinite(base_final$npGPerc), NA, base_final$npGPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$GI <- base_final$G + base_final$AG
+base_final$GI <- round(base_final$GI,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$npGI <- base_final$npG + base_final$AG
+base_final$npGI <- round(base_final$npGI,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$GPer90 <- base_final$G / base_final$Min90s
+base_final$GPer90 <- round(base_final$GPer90,digits=2)
+base_final$GPer90 <- ifelse(is.infinite(base_final$GPer90), NA, base_final$GPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$AGPer90 <- base_final$AG / base_final$Min90s
+base_final$AGPer90 <- round(base_final$AGPer90,digits=2)
+base_final$AGPer90 <- ifelse(is.infinite(base_final$AGPer90), NA, base_final$AGPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$GIPer90 <- base_final$GI / base_final$Min90s
+base_final$GIPer90 <- round(base_final$GIPer90,digits=2)
+base_final$GIPer90 <- ifelse(is.infinite(base_final$GIPer90), NA, base_final$GIPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$npGPer90 <- base_final$npG / base_final$Min90s
+base_final$npGPer90 <- round(base_final$npGPer90,digits=2)
+base_final$npGPer90 <- ifelse(is.infinite(base_final$npGPer90), NA, base_final$npGPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$npGIPer90 <- base_final$npGI / base_final$Min90s
+base_final$npGIPer90 <- round(base_final$npGIPer90,digits=2)
+base_final$npGIPer90 <- ifelse(is.infinite(base_final$npGIPer90), NA, base_final$npGIPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$npxGPerc <- base_final$npxG / base_final$xG
+base_final$npxGPerc <- round(base_final$npxGPerc,digits=2)
+base_final$npxGPerc <- ifelse(is.infinite(base_final$npxGPerc), NA, base_final$npxGPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$xGI <- base_final$xG + base_final$xAG
+base_final$xGI <- round(base_final$xGI,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$xGEff <- base_final$G - base_final$xG
+base_final$xGEff <- round(base_final$xGEff,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$npxGEff <- base_final$npG - base_final$npxG
+base_final$npxGEff <- round(base_final$npxGEff,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$xAGEff <- base_final$AG - base_final$xAG
+base_final$xAGEff <- round(base_final$xAGEff,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$xGPer90 <- base_final$xG / base_final$Min90s
+base_final$xGPer90 <- round(base_final$xGPer90,digits=2)
+base_final$xGPer90 <- ifelse(is.infinite(base_final$xGPer90), NA, base_final$xGPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$xAGPer90 <- base_final$xAG / base_final$Min90s
+base_final$xAGPer90 <- round(base_final$xAGPer90,digits=2)
+base_final$xAGPer90 <- ifelse(is.infinite(base_final$xAGPer90), NA, base_final$xAGPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$xGIPer90 <- base_final$xGI / base_final$Min90s
+base_final$xGIPer90 <- round(base_final$xGIPer90,digits=2)
+base_final$xGIPer90 <- ifelse(is.infinite(base_final$xGIPer90), NA, base_final$xGIPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$npxGPer90 <- base_final$npxG / base_final$Min90s
+base_final$npxGPer90 <- round(base_final$npxGPer90,digits=2)
+base_final$npxGPer90 <- ifelse(is.infinite(base_final$npxGPer90), NA, base_final$npxGPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$npxGI <- base_final$npxG + base_final$xAG
+base_final$npxGI <- round(base_final$npxGI,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$npxGIPer90 <- base_final$npxGI / base_final$Min90s
+base_final$npxGIPer90 <- round(base_final$npxGIPer90,digits=2)
+base_final$npxGIPer90 <- ifelse(is.infinite(base_final$npxGIPer90), NA, base_final$npxGIPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$SoTPerc <- base_final$SoT / base_final$Sh
+base_final$SoTPerc <- round(base_final$SoTPerc,digits=2)
+base_final$SoTPerc <- ifelse(is.infinite(base_final$SoTPerc), NA, base_final$SoTPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$ShPer90 <- base_final$Sh / base_final$Min90s
+base_final$ShPer90 <- round(base_final$ShPer90,digits=2)
+base_final$ShPer90 <- ifelse(is.infinite(base_final$ShPer90), NA, base_final$ShPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$SoTPer90 <- base_final$SoT / base_final$Min90s
+base_final$SoTPer90 <- round(base_final$SoTPer90,digits=2)
+base_final$SoTPer90 <- ifelse(is.infinite(base_final$SoTPer90), NA, base_final$SoTPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$GPerSh <- base_final$G / base_final$Sh
+base_final$GPerSh <- round(base_final$GPerSh,digits=2)
+base_final$GPerSh <- ifelse(is.infinite(base_final$GPerSh), NA, base_final$GPerSh)
+base_final[is.na(base_final)] = 0
+
+base_final$GPerSoT <- base_final$G / base_final$SoT
+base_final$GPerSoT <- round(base_final$GPerSoT,digits=2)
+base_final$GPerSoT <- ifelse(is.infinite(base_final$GPerSoT), NA, base_final$GPerSoT)
+base_final[is.na(base_final)] = 0
+
+base_final$npxGPerSh <- base_final$npxG / base_final$Sh
+base_final$npxGPerSh <- round(base_final$npxGPerSh,digits=2)
+base_final$npxGPerSh <- ifelse(is.infinite(base_final$npxGPerSh), NA, base_final$npxGPerSh)
+base_final[is.na(base_final)] = 0
+
+base_final$pScoPerc <- base_final$pSco / base_final$pSh
+base_final$pScoPerc <- round(base_final$pScoPerc,digits=2)
+base_final$pScoPerc <- ifelse(is.infinite(base_final$pScoPerc), NA, base_final$pScoPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$SCAPer90 <- base_final$SCA / base_final$Min90s
+base_final$SCAPer90 <- round(base_final$SCAPer90,digits=2)
+base_final$SCAPer90 <- ifelse(is.infinite(base_final$SCAPer90), NA, base_final$SCAPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$GCAPer90 <- base_final$GCA / base_final$Min90s
+base_final$GCAPer90 <- round(base_final$GCAPer90,digits=2)
+base_final$GCAPer90 <- ifelse(is.infinite(base_final$GCAPer90), NA, base_final$GCAPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$PasAttPer90 <- base_final$PasAtt / base_final$Min90s
+base_final$PasAttPer90 <- round(base_final$PasAttPer90,digits=2)
+base_final$PasAttPer90 <- ifelse(is.infinite(base_final$PasAttPer90), NA, base_final$PasAttPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$PasCmpPer90 <- base_final$PasCmp / base_final$Min90s
+base_final$PasCmpPer90 <- round(base_final$PasCmpPer90,digits=2)
+base_final$PasCmpPer90 <- ifelse(is.infinite(base_final$PasCmpPer90), NA, base_final$PasCmpPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$PasCmpPerc <- base_final$PasCmp / base_final$PasAtt
+base_final$PasCmpPerc <- round(base_final$PasCmpPerc,digits=2)
+base_final$PasCmpPerc <- ifelse(is.infinite(base_final$PasCmpPerc), NA, base_final$PasCmpPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$PasShrAttPer90 <- base_final$PasShrAtt / base_final$Min90s
+base_final$PasShrAttPer90 <- round(base_final$PasShrAttPer90,digits=2)
+base_final$PasShrAttPer90 <- ifelse(is.infinite(base_final$PasShrAttPer90), NA, base_final$PasShrAttPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$PasShrCmpPer90 <- base_final$PasShrCmp / base_final$Min90s
+base_final$PasShrCmpPer90 <- round(base_final$PasShrCmpPer90,digits=2)
+base_final$PasShrCmpPer90 <- ifelse(is.infinite(base_final$PasShrCmpPer90), NA, base_final$PasShrCmpPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$PasShrCmpPerc <- base_final$PasShrCmp / base_final$PasShrAtt
+base_final$PasShrCmpPerc <- round(base_final$PasShrCmpPerc,digits=2)
+base_final$PasShrCmpPerc <- ifelse(is.infinite(base_final$PasShrCmpPerc), NA, base_final$PasShrCmpPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$PasMdmAttPer90 <- base_final$PasMdmAtt / base_final$Min90s
+base_final$PasMdmAttPer90 <- round(base_final$PasMdmAttPer90,digits=2)
+base_final$PasMdmAttPer90 <- ifelse(is.infinite(base_final$PasMdmAttPer90), NA, base_final$PasMdmAttPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$PasMdmCmpPer90 <- base_final$PasMdmCmp / base_final$Min90s
+base_final$PasMdmCmpPer90 <- round(base_final$PasMdmCmpPer90,digits=2)
+base_final$PasMdmCmpPer90 <- ifelse(is.infinite(base_final$PasMdmCmpPer90), NA, base_final$PasMdmCmpPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$PasMdmCmpPerc <- base_final$PasMdmCmp / base_final$PasMdmAtt
+base_final$PasMdmCmpPerc <- round(base_final$PasMdmCmpPerc,digits=2)
+base_final$PasMdmCmpPerc <- ifelse(is.infinite(base_final$PasMdmCmpPerc), NA, base_final$PasMdmCmpPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$PasLngAttPer90 <- base_final$PasLngAtt / base_final$Min90s
+base_final$PasLngAttPer90 <- round(base_final$PasLngAttPer90,digits=2)
+base_final$PasLngAttPer90 <- ifelse(is.infinite(base_final$PasLngAttPer90), NA, base_final$PasLngAttPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$PasLngCmpPer90 <- base_final$PasLngCmp / base_final$Min90s
+base_final$PasLngCmpPer90 <- round(base_final$PasLngCmpPer90,digits=2)
+base_final$PasLngCmpPer90 <- ifelse(is.infinite(base_final$PasLngCmpPer90), NA, base_final$PasLngCmpPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$PasLngCmpPerc <- base_final$PasLngCmp / base_final$PasLngAtt
+base_final$PasLngCmpPerc <- round(base_final$PasLngCmpPerc,digits=2)
+base_final$PasLngCmpPerc <- ifelse(is.infinite(base_final$PasLngCmpPerc), NA, base_final$PasLngCmpPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$KPPer90 <- base_final$KP / base_final$Min90s
+base_final$KPPer90 <- round(base_final$KPPer90,digits=2)
+base_final$KPPer90 <- ifelse(is.infinite(base_final$KPPer90), NA, base_final$KPPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$PasOff3rdPer90 <- base_final$PasOff3rd / base_final$Min90s
+base_final$PasOff3rdPer90 <- round(base_final$PasOff3rdPer90,digits=2)
+base_final$PasOff3rdPer90 <- ifelse(is.infinite(base_final$PasOff3rdPer90), NA, base_final$PasOff3rdPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$PPAPer90 <- base_final$PPA / base_final$Min90s
+base_final$PPAPer90 <- round(base_final$PPAPer90,digits=2)
+base_final$PPAPer90 <- ifelse(is.infinite(base_final$PPAPer90), NA, base_final$PPAPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$CroPAPer90 <- base_final$CroPA / base_final$Min90s
+base_final$CroPAPer90 <- round(base_final$CroPAPer90,digits=2)
+base_final$CroPAPer90 <- ifelse(is.infinite(base_final$CroPAPer90), NA, base_final$CroPAPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$PasPrgCmpPer90 <- base_final$PasPrgCmp / base_final$Min90s
+base_final$PasPrgCmpPer90 <- round(base_final$PasPrgCmpPer90,digits=2)
+base_final$PasPrgCmpPer90 <- ifelse(is.infinite(base_final$PasPrgCmpPer90), NA, base_final$PasPrgCmpPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$PasDeePer90 <- base_final$PasDee / base_final$Min90s
+base_final$PasDeePer90 <- round(base_final$PasDeePer90,digits=2)
+base_final$PasDeePer90 <- ifelse(is.infinite(base_final$PasDeePer90), NA, base_final$PasDeePer90)
+base_final[is.na(base_final)] = 0
+
+base_final$PasChgOvrPer90 <- base_final$PasChgOvr / base_final$Min90s
+base_final$PasChgOvrPer90 <- round(base_final$PasChgOvrPer90,digits=2)
+base_final$PasChgOvrPer90 <- ifelse(is.infinite(base_final$PasChgOvrPer90), NA, base_final$PasChgOvrPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$PasDiagPer90 <- base_final$PasDiag / base_final$Min90s
+base_final$PasDiagPer90 <- round(base_final$PasDiagPer90,digits=2)
+base_final$PasDiagPer90 <- ifelse(is.infinite(base_final$PasDiagPer90), NA, base_final$PasDiagPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$TchPer90 <- base_final$Tch / base_final$Min90s
+base_final$TchPer90 <- round(base_final$TchPer90,digits=2)
+base_final$TchPer90 <- ifelse(is.infinite(base_final$TchPer90), NA, base_final$TchPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$TchOPAPer90 <- base_final$TchOPA / base_final$Min90s
+base_final$TchOPAPer90 <- round(base_final$TchOPAPer90,digits=2)
+base_final$TchOPAPer90 <- ifelse(is.infinite(base_final$TchOPAPer90), NA, base_final$TchOPAPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$TchDef3rdPer90 <- base_final$TchDef3rd / base_final$Min90s
+base_final$TchDef3rdPer90 <- round(base_final$TchDef3rdPer90,digits=2)
+base_final$TchDef3rdPer90 <- ifelse(is.infinite(base_final$TchDef3rdPer90), NA, base_final$TchDef3rdPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$TchMed3rdPer90 <- base_final$TchMed3rd / base_final$Min90s
+base_final$TchMed3rdPer90 <- round(base_final$TchMed3rdPer90,digits=2)
+base_final$TchMed3rdPer90 <- ifelse(is.infinite(base_final$TchMed3rdPer90), NA, base_final$TchMed3rdPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$TchOff3rdPer90 <- base_final$TchOff3rd / base_final$Min90s
+base_final$TchOff3rdPer90 <- round(base_final$TchOff3rdPer90,digits=2)
+base_final$TchOff3rdPer90 <- ifelse(is.infinite(base_final$TchOff3rdPer90), NA, base_final$TchOff3rdPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$TchPA <- base_final$TchPA / base_final$Min90s
+base_final$TchPA <- round(base_final$TchPA,digits=2)
+base_final$TchPA <- ifelse(is.infinite(base_final$TchPA), NA, base_final$TchPA)
+base_final[is.na(base_final)] = 0
+
+base_final$DriCmpPer90 <- base_final$DriCmp / base_final$Min90s
+base_final$DriCmpPer90 <- round(base_final$DriCmpPer90,digits=2)
+base_final$DriCmpPer90 <- ifelse(is.infinite(base_final$DriCmpPer90), NA, base_final$DriCmpPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$DriAttPer90 <- base_final$DriAtt / base_final$Min90s
+base_final$DriAttPer90 <- round(base_final$DriAttPer90,digits=2)
+base_final$DriAttPer90 <- ifelse(is.infinite(base_final$DriAttPer90), NA, base_final$DriAttPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$DriCmpPerc <- base_final$DriCmp / base_final$DriAtt
+base_final$DriCmpPerc <- round(base_final$DriCmpPerc,digits=2)
+base_final$DriCmpPerc <- ifelse(is.infinite(base_final$DriCmpPerc), NA, base_final$DriCmpPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$PasRecPer90 <- base_final$PasRec / base_final$Min90s
+base_final$PasRecPer90 <- round(base_final$PasRecPer90,digits=2)
+base_final$PasRecPer90 <- ifelse(is.infinite(base_final$PasRecPer90), NA, base_final$PasRecPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$PasPrgRecPer90 <- base_final$PasPrgRec / base_final$Min90s
+base_final$PasPrgRecPer90 <- round(base_final$PasPrgRecPer90,digits=2)
+base_final$PasPrgRecPer90 <- ifelse(is.infinite(base_final$PasPrgRecPer90), NA, base_final$PasPrgRecPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$TklPer90 <- base_final$Tkl / base_final$Min90s
+base_final$TklPer90 <- round(base_final$TklPer90,digits=2)
+base_final$TklPer90 <- ifelse(is.infinite(base_final$TklPer90), NA, base_final$TklPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$TklWPer90 <- base_final$TklW / base_final$Min90s
+base_final$TklWPer90 <- round(base_final$TklWPer90,digits=2)
+base_final$TklWPer90 <- ifelse(is.infinite(base_final$TklWPer90), NA, base_final$TklWPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$TklWPerc <- base_final$TklW / base_final$Tkl
+base_final$TklWPerc <- round(base_final$TklWPerc,digits=2)
+base_final$TklWPerc <- ifelse(is.infinite(base_final$TklWPerc), NA, base_final$TklWPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$TklDef3rdPer90 <- base_final$TklDef3rd / base_final$Min90s
+base_final$TklDef3rdPer90 <- round(base_final$TklDef3rdPer90,digits=2)
+base_final$TklDef3rdPer90 <- ifelse(is.infinite(base_final$TklDef3rdPer90), NA, base_final$TklDef3rdPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$TklMed3rdPer90 <- base_final$TklMed3rd / base_final$Min90s
+base_final$TklMed3rdPer90 <- round(base_final$TklMed3rdPer90,digits=2)
+base_final$TklMed3rdPer90 <- ifelse(is.infinite(base_final$TklMed3rdPer90), NA, base_final$TklMed3rdPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$TklOff3rdPer90 <- base_final$TklOff3rd / base_final$Min90s
+base_final$TklOff3rdPer90 <- round(base_final$TklOff3rdPer90,digits=2)
+base_final$TklOff3rdPer90 <- ifelse(is.infinite(base_final$TklOff3rdPer90), NA, base_final$TklOff3rdPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$TklDriAPer90 <- base_final$TklDriA / base_final$Min90s
+base_final$TklDriAPer90 <- round(base_final$TklDriAPer90,digits=2)
+base_final$TklDriAPer90 <- ifelse(is.infinite(base_final$TklDriAPer90), NA, base_final$TklDriAPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$DriAAttPer90 <- base_final$DriAAtt / base_final$Min90s
+base_final$DriAAttPer90 <- round(base_final$DriAAttPer90,digits=2)
+base_final$DriAAttPer90 <- ifelse(is.infinite(base_final$DriAAttPer90), NA, base_final$DriAAttPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$DriACmpPer90 <- base_final$DriACmp / base_final$Min90s
+base_final$DriACmpPer90 <- round(base_final$DriACmpPer90,digits=2)
+base_final$DriACmpPer90 <- ifelse(is.infinite(base_final$DriACmpPer90), NA, base_final$DriACmpPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$DriANotCmp <- base_final$DriAAtt - base_final$DriACmp
+base_final$DriANotCmp <- round(base_final$DriANotCmp,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$DriANotCmpPer90 <- base_final$DriANotCmp / base_final$Min90s
+base_final$DriANotCmpPer90 <- round(base_final$DriANotCmpPer90,digits=2)
+base_final$DriANotCmpPer90 <- ifelse(is.infinite(base_final$DriANotCmpPer90), NA, base_final$DriANotCmpPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$DriAnotCmpPerc <- (base_final$DriAAtt - base_final$DriACmp) / base_final$DriAAtt
+base_final$DriAnotCmpPerc <- round(base_final$DriAnotCmpPerc,digits=2)
+base_final$DriAnotCmpPerc <- ifelse(is.infinite(base_final$DriAnotCmpPerc), NA, base_final$DriAnotCmpPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$BlkPer90 <- base_final$Blk / base_final$Min90s
+base_final$BlkPer90 <- round(base_final$BlkPer90,digits=2)
+base_final$BlkPer90 <- ifelse(is.infinite(base_final$BlkPer90), NA, base_final$BlkPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$BlkShPer90 <- base_final$BlkSh / base_final$Min90s
+base_final$BlkShPer90 <- round(base_final$BlkShPer90,digits=2)
+base_final$BlkShPer90 <- ifelse(is.infinite(base_final$BlkShPer90), NA, base_final$BlkShPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$BlkPasPer90 <- base_final$BlkPas / base_final$Min90s
+base_final$BlkPasPer90 <- round(base_final$BlkPasPer90,digits=2)
+base_final$BlkPasPer90 <- ifelse(is.infinite(base_final$BlkPasPer90), NA, base_final$BlkPasPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$IntPer90 <- base_final$Int / base_final$Min90s
+base_final$IntPer90 <- round(base_final$IntPer90,digits=2)
+base_final$IntPer90 <- ifelse(is.infinite(base_final$IntPer90), NA, base_final$IntPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$Rcv <- base_final$Int + base_final$TklW
+base_final$Rcv <- round(base_final$Rcv,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$RcvPer90 <- base_final$Rcv / base_final$Min90s
+base_final$RcvPer90 <- round(base_final$RcvPer90,digits=2)
+base_final$RcvPer90 <- ifelse(is.infinite(base_final$RcvPer90), NA, base_final$RcvPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$onGPer90 <- base_final$onG / base_final$Min90s
+base_final$onGPer90 <- round(base_final$onGPer90,digits=2)
+base_final$onGPer90 <- ifelse(is.infinite(base_final$onGPer90), NA, base_final$onGPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$onGAPer90 <- base_final$onGA / base_final$Min90s
+base_final$onGAPer90 <- round(base_final$onGAPer90,digits=2)
+base_final$onGAPer90 <- ifelse(is.infinite(base_final$onGAPer90), NA, base_final$onGAPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$onGDPer90 <- base_final$onGD / base_final$Min90s
+base_final$onGDPer90 <- round(base_final$onGDPer90,digits=2)
+base_final$onGDPer90 <- ifelse(is.infinite(base_final$onGDPer90), NA, base_final$onGDPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$onxGPer90 <- base_final$onxG / base_final$Min90s
+base_final$onxGPer90 <- round(base_final$onxGPer90,digits=2)
+base_final$onxGPer90 <- ifelse(is.infinite(base_final$onxGPer90), NA, base_final$onxGPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$onxGAPer90 <- base_final$onxGA / base_final$Min90s
+base_final$onxGAPer90 <- round(base_final$onxGAPer90,digits=2)
+base_final$onxGAPer90 <- ifelse(is.infinite(base_final$onxGAPer90), NA, base_final$onxGAPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$onxGDPer90 <- base_final$onxGD / base_final$Min90s
+base_final$onxGDPer90 <- round(base_final$onxGDPer90,digits=2)
+base_final$onxGDPer90 <- ifelse(is.infinite(base_final$onxGDPer90), NA, base_final$onxGDPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$ADWPer90 <- base_final$ADW / base_final$Min90s
+base_final$ADWPer90 <- round(base_final$ADWPer90,digits=2)
+base_final$ADWPer90 <- ifelse(is.infinite(base_final$ADWPer90), NA, base_final$ADWPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$ADWPerc <- base_final$ADW / (base_final$ADW + base_final$ADL)
+base_final$ADWPerc <- round(base_final$ADWPerc,digits=2)
+base_final$ADWPerc <- ifelse(is.infinite(base_final$ADWPerc), NA, base_final$ADWPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$AD <- base_final$ADW + base_final$ADL
+base_final$AD <- round(base_final$AD,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$ADPer90 <- base_final$AD / base_final$Min90s
+base_final$ADPer90 <- round(base_final$ADPer90,digits=2)
+base_final$ADPer90 <- ifelse(is.infinite(base_final$ADPer90), NA, base_final$ADPer90)
+base_final[is.na(base_final)] = 0
+
+base_final$xAPer90 <- base_final$xA / base_final$Min90s
+base_final$xAPer90 <- round(base_final$xAPer90,digits=2)
+base_final$xAPer90 <- ifelse(is.infinite(base_final$xAPer90), NA, base_final$xAPer90)
+base_final[is.na(base_final)] = 0
+
+### TRANSFORMAR COLUMNAS CON TEXTOS QUE INCLUYAN CARACTERES ESPECIALES
+base_final$Player_Name <- stri_trans_general(base_final$Player_Name,"Latin-ASCII")
+base_final$Team <- stri_trans_general(base_final$Team,"Latin-ASCII")
+
+### CORREGIR COLUMNAS CON VALORES EXTRAÑOS O VACIOS
+base_final["Country"][base_final["Country"] == ''] <- 'NULL'
+base_final["Position"][base_final["Position"] == ''] <- 'NULL'
+base_final$PlayerURL <- tolower(base_final$PlayerURL)
+
+### ALMACENAR TABLA FINAL DE FBREF JUGADORES DEL AÑO ACTUALIZADO EN UN CSV A NIVEL LOCAL
+write.csv(base_final,"C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Big7_players_2023.csv", row.names = FALSE)
+
+### SOBREESCRIBIR TABLA FINAL DE FBREF JUGADORES DEL AÑO EN MYSQL WORKBENCH A NIVEL LOCAL
+dbWriteTable(mysqlconnection2, value = base_final, row.names = FALSE, name = "big7_players_2023", overwrite = TRUE)
+
+### SOBREESCRIBIR TABLA FINAL DE FBREF JUGADORES DEL AÑO EN MYSQL WORKBENCH A NIVEL LOCAL
+dbWriteTable(con_tfm, value = base_final, row.names = FALSE, name = "big7_players_2023", overwrite = TRUE)
+
+
+### LEER TODOS LOS ARCHIVOS DE FBREF JUGADORES POR AÑO EN TABLAS DENTRO DE R
+#Big7_players_2019 <- read.csv("C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Big7_players_2019.csv")
+#Big7_players_2020 <- read.csv("C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Big7_players_2020.csv")
+Big7_players_2021 <- read.csv("C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Big7_players_2021.csv")
+Big7_players_2022 <- read.csv("C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Big7_players_2022.csv")
+Big7_players_2023 <- read.csv("C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Big7_players_2023.csv")
+
+### CONCATENAR LOS ARCHIVOS PARA CREAR UN ARCHIVO FINAL TOTAL
+#Big7_players = rbind(Big7_players_2019,Big7_players_2020)
+#Big7_players = rbind(Big7_players,Big7_players_2021)
+Big7_players = rbind(Big7_players_2021,Big7_players_2022)
+Big7_players = rbind(Big7_players,Big7_players_2023)
+
+### ALMACENAR TABLA FINAL DE FBREF JUGADORES EN UN CSV A NIVEL LOCAL
+write.csv(Big7_players,"C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Big7_players.csv", row.names = FALSE)
+
+### SOBREESCRIBIR TABLA FINAL DE FBREF JUGADORES EN MYSQL WORKBENCH A NIVEL LOCAL
+dbWriteTable(mysqlconnection2, value = Big7_players, row.names = FALSE, name = "big7_players", overwrite = TRUE)
+dbWriteTable(con_tfm, value = Big7_players, row.names = FALSE, name = "big7_players", overwrite = TRUE)
+
+# realizar una consulta
+big7_players_2023 <- dbGetQuery(mysqlconnection2,"SELECT * FROM big7_players_2023")
+
+big7_players_2023 <- select(big7_players_2023,c("PlayerURL_Season","PlayerURL","Season","Team","Player_Name","Country","MP","Msta","MinTot","Min90s","MinPerc","MinPerMP","MinPerMSta","MPCmp","MBch","MinPerMBch","MBchNotP",
+                                                "G","GPer90","npG","npGPer90","npGPerc","AG","AGPer90","GI","GIPer90","npGI","npGIPer90","xG","xGPer90","xGEff","npxG","npxGPer90","npxGPerc","npxGEff","xAG","xAGPer90","xAGEff","xGI","xGIPer90","npxGI","npxGIPer90","Sh","ShPer90","GPerSh","npxGPerSh","SoT","SoTPer90","GPerSoT","SoTPerc","SoTAvgDis","SCA","SCAPer90","PreShPasAliBal","PreShPasDeaBal","PreShDri","PreShSh","GCA","GCAPer90","PreGPasAliBal","PreGPasDeaBal","PreGDri","PreGSh","pSh","pSco","pScoPerc",
+                                                "PasCmp","PasCmpPer90","PasAtt","PasAttPer90","PasCmpPerc","PasTotDis","PasShrCmp","PasShrCmpPer90","PasShrAtt","PasShrAttPer90","PasShrCmpPerc","PasMdmCmp","PasMdmCmpPer90","PasMdmCmpPerc","PasMdmAtt","PasMdmAttPer90","PasLngCmp","PasLngCmpPer90","PasLngAtt","PasLngAttPer90","PasLngCmpPerc","PasPrgCmp","PasPrgCmpPer90","PasPrgDis","KP","KPPer90","PasOff3rd","PasOff3rdPer90","PPA","PPAPer90","CroPA","CroPAPer90","PasDee","PasDeePer90","PasChgOvr","PasChgOvrPer90","PasDiag","PasDiagPer90","PasRec","PasRecPer90","PasPrgRec","PasPrgRecPer90","DriCmp","DriCmpPer90","DriAtt","DriAttPer90","DriCmpPerc","Tch","TchPer90","TchOPA","TchOPAPer90","TchDef3rd","TchDef3rdPer90","TchMed3rd","TchMed3rdPer90","TchOff3rd","TchOff3rdPer90","TchPA","TchAliBall",
+                                                "Tkl","TklPer90","TklW","TklWPer90","TklWPerc","TklDef3rd","TklDef3rdPer90","TklMed3rd","TklMed3rdPer90","TklOff3rd","TklOff3rdPer90","TklDriA","TklDriAPer90","DriAAtt","DriAAttPer90","DriACmp","DriACmpPer90","DriANotCmp","DriANotCmpPer90","DriAnotCmpPerc","Blk","BlkPer90","BlkSh","BlkShPer90","BlkPas","BlkPasPer90","Int","IntPer90","Rcv","RcvPer90","Clr","PreShAErr","AD","ADPer90","ADW","ADWPer90","ADWPerc","ADL"))
+#"YC","RC","FK","CkIns","CkOut","CkStr","onPPM","onG","onGA","onGD","onGNetPer90","OnOffNetPer90","onxG","onxGA","onxGD","onxGNetPer90","OnOffxNetPer90","YCTwo","Fls","FlsA","Ofs","PkW","PkCon","OwnG","YCPer90","FlsPer90","FlsAPer90","OfsPer90","onGPer90","onGAPer90","onGDPer90","onxGPer90","onxGAPer90","onxGDPer90"))
+
+big7_players_2023_Per90 <- select(big7_players_2023,c("PlayerURL_Season","PlayerURL","Season","Team","Player_Name","Country","MP","Msta","MinTot","Min90s","MinPerc","MinPerMP","MinPerMSta","MPCmp","MBch","MinPerMBch","MBchNotP",
+                                                      "GPer90","npGPer90","npGPerc","AGPer90","GIPer90","npGIPer90","xGPer90","xGEff","npxGPer90","npxGPerc","npxGEff","xAGPer90","xAGEff","xGIPer90","npxGIPer90","ShPer90","GPerSh","npxGPerSh","SoTPer90","GPerSoT","SoTPerc","SoTAvgDis","SCAPer90","GCAPer90",
+                                                      "PasCmpPer90","PasAttPer90","PasCmpPerc","PasTotDis","PasShrCmpPer90","PasShrAttPer90","PasShrCmpPerc","PasMdmCmpPer90","PasMdmCmpPerc","PasMdmAttPer90","PasLngCmpPer90","PasLngAttPer90","PasLngCmpPerc","PasPrgCmpPer90","PasPrgDis","KPPer90","PasOff3rdPer90","PPAPer90","CroPAPer90","PasDeePer90","PasChgOvrPer90","PasDiagPer90","PasRecPer90","PasPrgRecPer90","DriCmpPer90","DriAttPer90","DriCmpPerc","TchPer90","TchOPAPer90","TchDef3rdPer90","TchMed3rdPer90","TchOff3rdPer90",
+                                                      "TklPer90","TklWPer90","TklWPerc","TklDef3rdPer90","TklMed3rdPer90","TklOff3rdPer90","TklDriAPer90","DriAAttPer90","DriACmpPer90","DriANotCmpPer90","DriAnotCmpPerc","BlkPer90","BlkShPer90","BlkPasPer90","IntPer90","RcvPer90","ADPer90","ADWPer90","ADWPerc"))
+
+dbWriteTable(mysqlconnection2, value = big7_players_2023, row.names = FALSE, name = "big7_players_2023_ok", overwrite = TRUE)
+dbWriteTable(con_tfm, value = big7_players_2023, row.names = FALSE, name = "big7_players_2023_ok", overwrite = TRUE)
+dbWriteTable(mysqlconnection2, value = big7_players_2023_Per90, row.names = FALSE, name = "big7_players_2023_90", overwrite = TRUE)
+dbWriteTable(con_tfm, value = big7_players_2023_Per90, row.names = FALSE, name = "big7_players_2023_90", overwrite = TRUE)
+
+
+### LIMPIAR ECOSISTEMA Y CONSUMO
+#rm(list = ls(all.names = TRUE))
+#gc()
+
+
+### CARGAR TODAS LAS LIBRERIAS QUE SE PODRIAN UTILIZAR
+library(ggplot2)
+require(ggrepel)
+require(jsonlite)
+library(readxl)
+library(rvest)
+library(dplyr)
+library(stringr)
+library(readxl)
+library(worldfootballR)
+library(magrittr)
+library(rlang)
+library(stringi)
+library(DBI)
+library(RMySQL)
+library(shiny)
+library(shinyWidgets)
+library(tidyr)
+library(grid)
+library(forcats)
+library(gridExtra)
+library(cowplot)
+library(shinydisconnect)
+library(shinycssloaders)
+library(ggtext)
+library(png)
+library(DT)
+library(lubridate)
+
+### ACCESOS A MYSQL WORKBENCH PARA ALMACENAR BASES DE DATOSAA"
+mysqlconnection2 = dbConnect(RMySQL::MySQL(),
+                             dbname='big7',
+                             host='localhost',
+                             port=3306,
+                             user='root',
+                             password='jurgen96')
+
+### DAR PERMISOS PARA EDITAR EL SCHEMA EN MYSQL WORKBENCH
+dbSendQuery(mysqlconnection2, "SET GLOBAL local_infile = true;") 
+
+### VER TODAS LAS TABLAS QUE ACTUALMENTE TIENE EL SCHEMA
+dbListTables(mysqlconnection2)
+
+### SELECCIONAR LOS URLs DE LAS LIGAS QUE SE DESEAN ACTUALIZAR
+ligas = c("ENG","ESP","FRA","ITA","GER","POR","NED")
+
+### SELECCIONAR LOS TIPOS DE ESTADÍSTICAS QUE SE DESEAN ACTUALIZAR
+stats_types = c("league_table","league_table_home_away","standard","shooting", "passing", "passing_types", "goal_shot_creation", "defense","possession","playing_time","misc")
+
+### CREAR UN BUCLE PARA ACTUALIZAR LA INFORMACIÓN ACUMULADA POR CADA LIGA Y POR CADA TIPO DE ESTADÍSTICA ESPECIFICADA
+j=1
+k=1
+# primer bucle es para recorrer liga por liga
+for (j in 1:length(ligas)) {
+  # Hago un print de que número de liga se esta actualizando para ver el avance
+  print(ligas[j])
+  Sys.sleep(60)
+  # segundo bucle es para recorrer cada tipo de estadística dentro de cada liga
+  for (k in 1:length(stats_types)) {
+    # creo una tabla donde almaceno la info de la liga que toca y el tipo de estadística que toca
+    a = fb_season_team_stats(country = ligas[j], gender = "M", season_end_year = "2023", tier = "1st", stat_type= stats_types[k])
+    # creo una llave en la tabla para referenciar de manera única a cada jugador
+    a$Llave <- paste(a$Season_End_Year," / ",a$Squad," / ",a$Team_or_Opponent)
+    # creo una condicion para concatenar los tipos de stats. primer registro: no concatena. segundo registro: concatena el primero y el segundo
+    # resto de registros: concatenado previo y el registro que toca
+    if (k == 1) {
+      # por ser primer registro no concatena. base = a.
+      base = a
+      # Hago un print de que tipo de estadística se esta actualizando para ver el avance
+      print(stats_types[k])
+      # elimino columnas que pueden causar problemas (solo aplica al año en curso)
+      # base <- subset( base, select = -c(Last.5))
+    } else {
+      if (k == 2) {
+        # por ser segundo registro se concatena el primer y segundo registro. base = base + a.
+        base <- merge(x=base,y=a,by="Llave",all.x=TRUE)
+        # Hago un print de que tipo de estadística se esta actualizando para ver el avance
+        print(stats_types[k])
+      } else {
+        # por ser tercer y mas registro se concatena el primer y segundo registro. base = base + a.
+        base <- merge(x=base,y=a,by="Llave",all.x=TRUE)
+        # Hago un print de que tipo de estadística se esta actualizando para ver el avance
+        print(stats_types[k])
+      }
+    }
+    k = k + 1
+  }
+  # creo una condicion para concatenar las ligas. primer registro: no concatena. segundo registro: concatena el concatenado previo y el siguiente
+  if (j == 1) {
+    # si es la primera liga, no concatena. base_final = base.
+    base_final = base
+  } else {
+    # si no es la primera liga, concatena. base_final = base_final previa + base.
+    base_final = bind_rows(base_final,base)
+  }
+  j = j + 1
+}
+
+### LIMPIAR LA BASE FINAL
+
+### ELIMINAR COLUMNAS QUE NO SE DESEAN
+base_final <- subset( base_final, select = -c(Succ_percent_Take_Ons,Tkld_Take_Ons,Tkld_percent_Take_Ons,Carries_Carries,TotDist_Carries,
+                                              PrgDist_Carries,PrgC_Carries,Final_Third_Carries,CPA_Carries,Mis_Carries,Dis_Carries,
+                                              PrgC_Progression,PrgP_Progression,Top.Team.Scorer,Goalkeeper,Notes,
+                                              Competition_Name.y...26,Gender.y...27,Country.y...28,Season_End_Year.y...29,Squad.y...30,
+                                              Team_or_Opponent.y...31,Rk.y,Competition_Name.x...59,Gender.x...60,Country.x...61,
+                                              Season_End_Year.x...62,Squad.x...63,Team_or_Opponent.x...64,G_plus_A,
+                                              Competition_Name.y...96,Gender.y...97,Country.y...98,Season_End_Year.y...99,
+                                              Squad.y...100,Team_or_Opponent.y...101,Competition_Name.x...121,Gender.x...122,
+                                              Country.x...123,Season_End_Year.x...124,Team_or_Opponent.x...126,Num_Players.x...127,
+                                              Competition_Name.y...152,Gender.y...153,Country.y...154,Season_End_Year.y...155,
+                                              Squad.y...156,Team_or_Opponent.y...157,Num_Players.y...158,Competition_Name.x...175,
+                                              Gender.x...176,Country.x...177,Season_End_Year.x...178,Squad.x...179,
+                                              Team_or_Opponent.x...180,Num_Players.x...181,Competition_Name.y...199,Gender.y...200,
+                                              Country.y...201,Season_End_Year.y...202,Squad.y...203,Team_or_Opponent.y...204,
+                                              Num_Players.y...205,Competition_Name.x...223,Gender.x...224,Country.x...225,
+                                              Season_End_Year.x...226,Squad.x...227,Team_or_Opponent.x...228,Num_Players.x...229,
+                                              Competition_Name.y...254,Gender.y...255,Country.y...256,Season_End_Year.y...257,
+                                              Squad.y...258,Team_or_Opponent.y...259,Num_Players.y...260,Competition_Name.x...2,
+                                              Gender.x...3,Country.x...4,Season_End_Year.x...5,Squad.x...6,Team_or_Opponent.x...7,
+                                              Gender,Country,Age.y,Pts.MP,Attendance,Squad.x...125,Num_Players.x...65,Poss.y,
+                                              MP_Playing_Time.x,Starts_Playing_Time,Min_Playing_Time.x,Mins_Per_90_Playing_Time.x,
+                                              Gls_Standard,Ast.y,PK_Standard,PKatt_Standard,Mins_Per_90,CrdY.y,CrdR.y,
+                                              Num_Players.y...102,Mins_Per_90.x...103,xG_Expected.y,npxG_Expected.y,npxG_per_Sh_Expected,
+                                              G_minus_xG_Expected,G_minus_xG_Expected,Mins_Per_90.y...128,Cmp_percent_Total,
+                                              Cmp_percent_Short,Cmp_percent_Medium,Cmp_percent_Long,xAG,Mins_Per_90.x...159,Att,
+                                              CK_Pass_Types,Cmp_Outcomes,Mins_Per_90.y...182,Mins_Per_90.x...206,Int.y,
+                                              Mins_Per_90.y...231,MP_Playing_Time.y,Min_Playing_Time.y,Mn_per_MP_Playing_Time,
+                                              Min_percent_Playing_Time,Mins_Per_90_Playing_Time.y,Starts_Starts,Mn_per_Start_Starts,
+                                              Compl_Starts,Subs_Subs,Mn_per_Sub_Subs,unSub_Subs,PPM_Team_Success,onG_Team_Success,
+                                              onGA_Team_Success,Plus_Minus_Team_Success,Plus_Minus90_Team_Success,onxG_Team_Success_xG_,
+                                              onxGA_Team_Success_xG,xGPlus_Minus_Team_Success_xG,xGPlus_Minus90_Team_Success_xG,Crs,
+                                              TklW,Won_percent_Aerial_Duels,xGD.90,Pts_per_MP_Home,xGD_per_90_Home,Pts_per_MP_Away,
+                                              xGD_per_90_Away,Gls_Per_Minutes,Ast_Per_Minutes,G_plus_A_Per_Minutes,
+                                              G_minus_PK_Per_Minutes,G_plus_A_minus_PK_Per_Minutes,npxG_plus_xAG_Expected,
+                                              xG_Per_Minutes,xAG_Per_Minutes,xG_plus_xAG_Per_Minutes,npxG_Per_Minutes,
+                                              npxG_plus_xAG_Per_Minutes,SoT_percent_Standard,Sh_per_90_Standard,SoT_per_90_Standard,
+                                              G_per_Sh_Standard,G_per_SoT_Standard,A_minus_xAG,SCA90_SCA,GCA90_GCA))
+
+
+### CAMBIAR TÍTULOS DE COLUMNAS
+names(base_final) <- c("Llave","Rk","MP","W","D","L","GF","GA","GD","Pts","xG","xGA","xGD","Home_MP","Home_W","Home_D","Home_L",
+                       "Home_GF","Home_GA","Home_GD","Home_Pts","Home_xG","Home_xGA","Home_xGD","Away_MP","Away_W","Away_D","Away_L",
+                       "Away_GF","Away_GA","Away_GD","Away_Pts","Away_xG","Away_xGA","Away_xGD","Age","Poss","G","AG","npG","pSco",
+                       "pSh","YC","RC","xG","npxG","xAG","Sh","SoT","SoTAvgDis","FK","Eliminar","PasCmp","PasAtt","PasTotDis",
+                       "PasPrgDis","PasShrCmp","PasShrAtt","PasMdmCmp","PasMdmAtt","PasLngCmp","PasLngAtt","xA","KP","PasOff3rd",
+                       "PPA","CroPA","PasPrgCmp","PasAliBall","PasDeaBall","PasFk","PasDee","PasChgOvr","PasDiag","PasTI","CkIns",
+                       "CkOut","CkStr","PasOfs","PasBlo","SCA","PreShPasAliBal","PreShPasDeaBal","PreShDri","PreShSh","PreShFou",
+                       "PreShDefAct","GCA","PreGPasAliBal","PreGPasDeaBal","PreGDri","PreGSh","PreGFou","PreGDefAct","Tkl","TklW",
+                       "TklDef3rd","TklMed3rd","TklOff3rd","TklDriA","DriAAtt","Tklperc","DriACmp","Blk","BlkSh","BlkPas","Int",
+                       "TklandInt","Clr","PreShAErr","Tch","TchOPA","TchDef3rd","TchMed3rd","TchOff3rd","TchPA","TchAliBall","DriAtt",
+                       "DriCmp","PasRec","PasPrgRec","Competition","Season_End_Year","Team","Team_or_Opponent","Num_Players","YC2",
+                       "Fls","FlsA","Ofs","PkW","PkCon","OwnG","RcvLostBalls","ADW","ADL")
+
+### ELIMINAR COLUMNAS QUE NO SE DESEAN
+base_final <- subset( base_final, select = -c(Eliminar) )
+
+### RELLENAR NAs A 0
+base_final[is.na(base_final)] = 0
+
+### CREAR NUEVAS COLUMNAS, REDONDEAR A DOS DECIMALES Y RELLENAR INFINITOS Y NAs A 0
+base_final$YCPerMP <- base_final$YC / base_final$MP
+base_final$YCPerMP <- round(base_final$YCPerMP,digits=2)
+base_final$YCPerMP <- ifelse(is.infinite(base_final$YCPerMP), NA, base_final$YCPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$FlsPerMP <- base_final$Fls / base_final$MP
+base_final$FlsPerMP <- round(base_final$FlsPerMP,digits=2)
+base_final$FlsPerMP <- ifelse(is.infinite(base_final$FlsPerMP), NA, base_final$FlsPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$FlsAPerMP <- base_final$FlsA / base_final$MP
+base_final$FlsAPerMP <- round(base_final$FlsAPerMP,digits=2)
+base_final$FlsAPerMP <- ifelse(is.infinite(base_final$FlsAPerMP), NA, base_final$FlsAPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$OfsPerMP <- base_final$Ofs / base_final$MP
+base_final$OfsPerMP <- round(base_final$OfsPerMP,digits=2)
+base_final$OfsPerMP <- ifelse(is.infinite(base_final$OfsPerMP), NA, base_final$OfsPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$npGPerc <- base_final$npG / base_final$G
+base_final$npGPerc <- round(base_final$npGPerc,digits=2)
+base_final$npGPerc <- ifelse(is.infinite(base_final$npGPerc), NA, base_final$npGPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$GI <- base_final$G + base_final$AG
+base_final$GI <- round(base_final$GI,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$npGI <- base_final$npG + base_final$AG
+base_final$npGI <- round(base_final$npGI,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$GPerMP <- base_final$G / base_final$MP
+base_final$GPerMP <- round(base_final$GPerMP,digits=2)
+base_final$GPerMP <- ifelse(is.infinite(base_final$GPerMP), NA, base_final$GPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$AGPerMP <- base_final$AG / base_final$MP
+base_final$AGPerMP <- round(base_final$AGPerMP,digits=2)
+base_final$AGPerMP <- ifelse(is.infinite(base_final$AGPerMP), NA, base_final$AGPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$GIPerMP <- base_final$GI / base_final$MP
+base_final$GIPerMP <- round(base_final$GIPerMP,digits=2)
+base_final$GIPerMP <- ifelse(is.infinite(base_final$GIPerMP), NA, base_final$GIPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$npGPerMP <- base_final$npG / base_final$MP
+base_final$npGPerMP <- round(base_final$npGPerMP,digits=2)
+base_final$npGPerMP <- ifelse(is.infinite(base_final$npGPerMP), NA, base_final$npGPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$npGIPerMP <- base_final$npGI / base_final$MP
+base_final$npGIPerMP <- round(base_final$npGIPerMP,digits=2)
+base_final$npGIPerMP <- ifelse(is.infinite(base_final$npGIPerMP), NA, base_final$npGIPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$npxGPerc <- base_final$npxG / base_final$xG
+base_final$npxGPerc <- round(base_final$npxGPerc,digits=2)
+base_final$npxGPerc <- ifelse(is.infinite(base_final$npxGPerc), NA, base_final$npxGPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$xGI <- base_final$xG + base_final$xAG
+base_final$xGI <- round(base_final$xGI,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$xGEff <- base_final$G - base_final$xG
+base_final$xGEff <- round(base_final$xGEff,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$npxGEff <- base_final$npG - base_final$npxG
+base_final$npxGEff <- round(base_final$npxGEff,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$xAGEff <- base_final$AG - base_final$xAG
+base_final$xAGEff <- round(base_final$xAGEff,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$xGPerMP <- base_final$xG / base_final$MP
+base_final$xGPerMP <- round(base_final$xGPerMP,digits=2)
+base_final$xGPerMP <- ifelse(is.infinite(base_final$xGPerMP), NA, base_final$xGPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$xAGPerMP <- base_final$xAG / base_final$MP
+base_final$xAGPerMP <- round(base_final$xAGPerMP,digits=2)
+base_final$xAGPerMP <- ifelse(is.infinite(base_final$xAGPerMP), NA, base_final$xAGPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$xGIPerMP <- base_final$xGI / base_final$MP
+base_final$xGIPerMP <- round(base_final$xGIPerMP,digits=2)
+base_final$xGIPerMP <- ifelse(is.infinite(base_final$xGIPerMP), NA, base_final$xGIPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$npxGPerMP <- base_final$npxG / base_final$MP
+base_final$npxGPerMP <- round(base_final$npxGPerMP,digits=2)
+base_final$npxGPerMP <- ifelse(is.infinite(base_final$npxGPerMP), NA, base_final$npxGPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$npxGI <- base_final$npxG + base_final$xAG
+base_final$npxGI <- round(base_final$npxGI,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$npxGIPerMP <- base_final$npxGI / base_final$MP
+base_final$npxGIPerMP <- round(base_final$npxGIPerMP,digits=2)
+base_final$npxGIPerMP <- ifelse(is.infinite(base_final$npxGIPerMP), NA, base_final$npxGIPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$SoTPerc <- base_final$SoT / base_final$Sh
+base_final$SoTPerc <- round(base_final$SoTPerc,digits=2)
+base_final$SoTPerc <- ifelse(is.infinite(base_final$SoTPerc), NA, base_final$SoTPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$ShPerMP <- base_final$Sh / base_final$MP
+base_final$ShPerMP <- round(base_final$ShPerMP,digits=2)
+base_final$ShPerMP <- ifelse(is.infinite(base_final$ShPerMP), NA, base_final$ShPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$SoTPerMP <- base_final$SoT / base_final$MP
+base_final$SoTPerMP <- round(base_final$SoTPerMP,digits=2)
+base_final$SoTPerMP <- ifelse(is.infinite(base_final$SoTPerMP), NA, base_final$SoTPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$GPerSh <- base_final$G / base_final$Sh
+base_final$GPerSh <- round(base_final$GPerSh,digits=2)
+base_final$GPerSh <- ifelse(is.infinite(base_final$GPerSh), NA, base_final$GPerSh)
+base_final[is.na(base_final)] = 0
+
+base_final$GPerSoT <- base_final$G / base_final$SoT
+base_final$GPerSoT <- round(base_final$GPerSoT,digits=2)
+base_final$GPerSoT <- ifelse(is.infinite(base_final$GPerSoT), NA, base_final$GPerSoT)
+base_final[is.na(base_final)] = 0
+
+base_final$npxGPerSh <- base_final$npxG / base_final$Sh
+base_final$npxGPerSh <- round(base_final$npxGPerSh,digits=2)
+base_final$npxGPerSh <- ifelse(is.infinite(base_final$npxGPerSh), NA, base_final$npxGPerSh)
+base_final[is.na(base_final)] = 0
+
+base_final$pScoPerc <- base_final$pSco / base_final$pSh
+base_final$pScoPerc <- round(base_final$pScoPerc,digits=2)
+base_final$pScoPerc <- ifelse(is.infinite(base_final$pScoPerc), NA, base_final$pScoPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$SCAPerMP <- base_final$SCA / base_final$MP
+base_final$SCAPerMP <- round(base_final$SCAPerMP,digits=2)
+base_final$SCAPerMP <- ifelse(is.infinite(base_final$SCAPerMP), NA, base_final$SCAPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$GCAPerMP <- base_final$GCA / base_final$MP
+base_final$GCAPerMP <- round(base_final$GCAPerMP,digits=2)
+base_final$GCAPerMP <- ifelse(is.infinite(base_final$GCAPerMP), NA, base_final$GCAPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$PasAttPerMP <- base_final$PasAtt / base_final$MP
+base_final$PasAttPerMP <- round(base_final$PasAttPerMP,digits=2)
+base_final$PasAttPerMP <- ifelse(is.infinite(base_final$PasAttPerMP), NA, base_final$PasAttPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$PasCmpPerMP <- base_final$PasCmp / base_final$MP
+base_final$PasCmpPerMP <- round(base_final$PasCmpPerMP,digits=2)
+base_final$PasCmpPerMP <- ifelse(is.infinite(base_final$PasCmpPerMP), NA, base_final$PasCmpPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$PasCmpPerc <- base_final$PasCmp / base_final$PasAtt
+base_final$PasCmpPerc <- round(base_final$PasCmpPerc,digits=2)
+base_final$PasCmpPerc <- ifelse(is.infinite(base_final$PasCmpPerc), NA, base_final$PasCmpPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$PasShrAttPerMP <- base_final$PasShrAtt / base_final$MP
+base_final$PasShrAttPerMP <- round(base_final$PasShrAttPerMP,digits=2)
+base_final$PasShrAttPerMP <- ifelse(is.infinite(base_final$PasShrAttPerMP), NA, base_final$PasShrAttPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$PasShrCmpPerMP <- base_final$PasShrCmp / base_final$MP
+base_final$PasShrCmpPerMP <- round(base_final$PasShrCmpPerMP,digits=2)
+base_final$PasShrCmpPerMP <- ifelse(is.infinite(base_final$PasShrCmpPerMP), NA, base_final$PasShrCmpPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$PasShrCmpPerc <- base_final$PasShrCmp / base_final$PasShrAtt
+base_final$PasShrCmpPerc <- round(base_final$PasShrCmpPerc,digits=2)
+base_final$PasShrCmpPerc <- ifelse(is.infinite(base_final$PasShrCmpPerc), NA, base_final$PasShrCmpPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$PasMdmAttPerMP <- base_final$PasMdmAtt / base_final$MP
+base_final$PasMdmAttPerMP <- round(base_final$PasMdmAttPerMP,digits=2)
+base_final$PasMdmAttPerMP <- ifelse(is.infinite(base_final$PasMdmAttPerMP), NA, base_final$PasMdmAttPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$PasMdmCmpPerMP <- base_final$PasMdmCmp / base_final$MP
+base_final$PasMdmCmpPerMP <- round(base_final$PasMdmCmpPerMP,digits=2)
+base_final$PasMdmCmpPerMP <- ifelse(is.infinite(base_final$PasMdmCmpPerMP), NA, base_final$PasMdmCmpPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$PasMdmCmpPerc <- base_final$PasMdmCmp / base_final$PasMdmAtt
+base_final$PasMdmCmpPerc <- round(base_final$PasMdmCmpPerc,digits=2)
+base_final$PasMdmCmpPerc <- ifelse(is.infinite(base_final$PasMdmCmpPerc), NA, base_final$PasMdmCmpPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$PasLngAttPerMP <- base_final$PasLngAtt / base_final$MP
+base_final$PasLngAttPerMP <- round(base_final$PasLngAttPerMP,digits=2)
+base_final$PasLngAttPerMP <- ifelse(is.infinite(base_final$PasLngAttPerMP), NA, base_final$PasLngAttPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$PasLngCmpPerMP <- base_final$PasLngCmp / base_final$MP
+base_final$PasLngCmpPerMP <- round(base_final$PasLngCmpPerMP,digits=2)
+base_final$PasLngCmpPerMP <- ifelse(is.infinite(base_final$PasLngCmpPerMP), NA, base_final$PasLngCmpPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$PasLngCmpPerc <- base_final$PasLngCmp / base_final$PasLngAtt
+base_final$PasLngCmpPerc <- round(base_final$PasLngCmpPerc,digits=2)
+base_final$PasLngCmpPerc <- ifelse(is.infinite(base_final$PasLngCmpPerc), NA, base_final$PasLngCmpPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$KPPerMP <- base_final$KP / base_final$MP
+base_final$KPPerMP <- round(base_final$KPPerMP,digits=2)
+base_final$KPPerMP <- ifelse(is.infinite(base_final$KPPerMP), NA, base_final$KPPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$PasOff3rdPerMP <- base_final$PasOff3rd / base_final$MP
+base_final$PasOff3rdPerMP <- round(base_final$PasOff3rdPerMP,digits=2)
+base_final$PasOff3rdPerMP <- ifelse(is.infinite(base_final$PasOff3rdPerMP), NA, base_final$PasOff3rdPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$PPAPerMP <- base_final$PPA / base_final$MP
+base_final$PPAPerMP <- round(base_final$PPAPerMP,digits=2)
+base_final$PPAPerMP <- ifelse(is.infinite(base_final$PPAPerMP), NA, base_final$PPAPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$CroPAPerMP <- base_final$CroPA / base_final$MP
+base_final$CroPAPerMP <- round(base_final$CroPAPerMP,digits=2)
+base_final$CroPAPerMP <- ifelse(is.infinite(base_final$CroPAPerMP), NA, base_final$CroPAPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$PasPrgCmpPerMP <- base_final$PasPrgCmp / base_final$MP
+base_final$PasPrgCmpPerMP <- round(base_final$PasPrgCmpPerMP,digits=2)
+base_final$PasPrgCmpPerMP <- ifelse(is.infinite(base_final$PasPrgCmpPerMP), NA, base_final$PasPrgCmpPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$PasDeePerMP <- base_final$PasDee / base_final$MP
+base_final$PasDeePerMP <- round(base_final$PasDeePerMP,digits=2)
+base_final$PasDeePerMP <- ifelse(is.infinite(base_final$PasDeePerMP), NA, base_final$PasDeePerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$PasChgOvrPerMP <- base_final$PasChgOvr / base_final$MP
+base_final$PasChgOvrPerMP <- round(base_final$PasChgOvrPerMP,digits=2)
+base_final$PasChgOvrPerMP <- ifelse(is.infinite(base_final$PasChgOvrPerMP), NA, base_final$PasChgOvrPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$PasDiagPerMP <- base_final$PasDiag / base_final$MP
+base_final$PasDiagPerMP <- round(base_final$PasDiagPerMP,digits=2)
+base_final$PasDiagPerMP <- ifelse(is.infinite(base_final$PasDiagPerMP), NA, base_final$PasDiagPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$TchPerMP <- base_final$Tch / base_final$MP
+base_final$TchPerMP <- round(base_final$TchPerMP,digits=2)
+base_final$TchPerMP <- ifelse(is.infinite(base_final$TchPerMP), NA, base_final$TchPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$TchOPAPerMP <- base_final$TchOPA / base_final$MP
+base_final$TchOPAPerMP <- round(base_final$TchOPAPerMP,digits=2)
+base_final$TchOPAPerMP <- ifelse(is.infinite(base_final$TchOPAPerMP), NA, base_final$TchOPAPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$TchDef3rdPerMP <- base_final$TchDef3rd / base_final$MP
+base_final$TchDef3rdPerMP <- round(base_final$TchDef3rdPerMP,digits=2)
+base_final$TchDef3rdPerMP <- ifelse(is.infinite(base_final$TchDef3rdPerMP), NA, base_final$TchDef3rdPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$TchMed3rdPerMP <- base_final$TchMed3rd / base_final$MP
+base_final$TchMed3rdPerMP <- round(base_final$TchMed3rdPerMP,digits=2)
+base_final$TchMed3rdPerMP <- ifelse(is.infinite(base_final$TchMed3rdPerMP), NA, base_final$TchMed3rdPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$TchOff3rdPerMP <- base_final$TchOff3rd / base_final$MP
+base_final$TchOff3rdPerMP <- round(base_final$TchOff3rdPerMP,digits=2)
+base_final$TchOff3rdPerMP <- ifelse(is.infinite(base_final$TchOff3rdPerMP), NA, base_final$TchOff3rdPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$TchPA <- base_final$TchPA / base_final$MP
+base_final$TchPA <- round(base_final$TchPA,digits=2)
+base_final$TchPA <- ifelse(is.infinite(base_final$TchPA), NA, base_final$TchPA)
+base_final[is.na(base_final)] = 0
+
+base_final$DriCmpPerMP <- base_final$DriCmp / base_final$MP
+base_final$DriCmpPerMP <- round(base_final$DriCmpPerMP,digits=2)
+base_final$DriCmpPerMP <- ifelse(is.infinite(base_final$DriCmpPerMP), NA, base_final$DriCmpPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$DriAttPerMP <- base_final$DriAtt / base_final$MP
+base_final$DriAttPerMP <- round(base_final$DriAttPerMP,digits=2)
+base_final$DriAttPerMP <- ifelse(is.infinite(base_final$DriAttPerMP), NA, base_final$DriAttPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$DriCmpPerc <- base_final$DriCmp / base_final$DriAtt
+base_final$DriCmpPerc <- round(base_final$DriCmpPerc,digits=2)
+base_final$DriCmpPerc <- ifelse(is.infinite(base_final$DriCmpPerc), NA, base_final$DriCmpPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$PasRecPerMP <- base_final$PasRec / base_final$MP
+base_final$PasRecPerMP <- round(base_final$PasRecPerMP,digits=2)
+base_final$PasRecPerMP <- ifelse(is.infinite(base_final$PasRecPerMP), NA, base_final$PasRecPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$PasPrgRecPerMP <- base_final$PasPrgRec / base_final$MP
+base_final$PasPrgRecPerMP <- round(base_final$PasPrgRecPerMP,digits=2)
+base_final$PasPrgRecPerMP <- ifelse(is.infinite(base_final$PasPrgRecPerMP), NA, base_final$PasPrgRecPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$TklPerMP <- base_final$Tkl / base_final$MP
+base_final$TklPerMP <- round(base_final$TklPerMP,digits=2)
+base_final$TklPerMP <- ifelse(is.infinite(base_final$TklPerMP), NA, base_final$TklPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$TklWPerMP <- base_final$TklW / base_final$MP
+base_final$TklWPerMP <- round(base_final$TklWPerMP,digits=2)
+base_final$TklWPerMP <- ifelse(is.infinite(base_final$TklWPerMP), NA, base_final$TklWPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$TklWPerc <- base_final$TklW / base_final$Tkl
+base_final$TklWPerc <- round(base_final$TklWPerc,digits=2)
+base_final$TklWPerc <- ifelse(is.infinite(base_final$TklWPerc), NA, base_final$TklWPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$TklDef3rdPerMP <- base_final$TklDef3rd / base_final$MP
+base_final$TklDef3rdPerMP <- round(base_final$TklDef3rdPerMP,digits=2)
+base_final$TklDef3rdPerMP <- ifelse(is.infinite(base_final$TklDef3rdPerMP), NA, base_final$TklDef3rdPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$TklMed3rdPerMP <- base_final$TklMed3rd / base_final$MP
+base_final$TklMed3rdPerMP <- round(base_final$TklMed3rdPerMP,digits=2)
+base_final$TklMed3rdPerMP <- ifelse(is.infinite(base_final$TklMed3rdPerMP), NA, base_final$TklMed3rdPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$TklOff3rdPerMP <- base_final$TklOff3rd / base_final$MP
+base_final$TklOff3rdPerMP <- round(base_final$TklOff3rdPerMP,digits=2)
+base_final$TklOff3rdPerMP <- ifelse(is.infinite(base_final$TklOff3rdPerMP), NA, base_final$TklOff3rdPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$TklDriAPerMP <- base_final$TklDriA / base_final$MP
+base_final$TklDriAPerMP <- round(base_final$TklDriAPerMP,digits=2)
+base_final$TklDriAPerMP <- ifelse(is.infinite(base_final$TklDriAPerMP), NA, base_final$TklDriAPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$DriAAttPerMP <- base_final$DriAAtt / base_final$MP
+base_final$DriAAttPerMP <- round(base_final$DriAAttPerMP,digits=2)
+base_final$DriAAttPerMP <- ifelse(is.infinite(base_final$DriAAttPerMP), NA, base_final$DriAAttPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$DriACmpPerMP <- base_final$DriACmp / base_final$MP
+base_final$DriACmpPerMP <- round(base_final$DriACmpPerMP,digits=2)
+base_final$DriACmpPerMP <- ifelse(is.infinite(base_final$DriACmpPerMP), NA, base_final$DriACmpPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$DriANotCmp <- base_final$DriAAtt - base_final$DriACmp
+base_final$DriANotCmp <- round(base_final$DriANotCmp,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$DriANotCmpPerMP <- base_final$DriANotCmp / base_final$MP
+base_final$DriANotCmpPerMP <- round(base_final$DriANotCmpPerMP,digits=2)
+base_final$DriANotCmpPerMP <- ifelse(is.infinite(base_final$DriANotCmpPerMP), NA, base_final$DriANotCmpPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$DriAnotCmpPerc <- (base_final$DriAAtt - base_final$DriACmp) / base_final$DriAAtt
+base_final$DriAnotCmpPerc <- round(base_final$DriAnotCmpPerc,digits=2)
+base_final$DriAnotCmpPerc <- ifelse(is.infinite(base_final$DriAnotCmpPerc), NA, base_final$DriAnotCmpPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$BlkPerMP <- base_final$Blk / base_final$MP
+base_final$BlkPerMP <- round(base_final$BlkPerMP,digits=2)
+base_final$BlkPerMP <- ifelse(is.infinite(base_final$BlkPerMP), NA, base_final$BlkPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$BlkShPerMP <- base_final$BlkSh / base_final$MP
+base_final$BlkShPerMP <- round(base_final$BlkShPerMP,digits=2)
+base_final$BlkShPerMP <- ifelse(is.infinite(base_final$BlkShPerMP), NA, base_final$BlkShPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$BlkPasPerMP <- base_final$BlkPas / base_final$MP
+base_final$BlkPasPerMP <- round(base_final$BlkPasPerMP,digits=2)
+base_final$BlkPasPerMP <- ifelse(is.infinite(base_final$BlkPasPerMP), NA, base_final$BlkPasPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$IntPerMP <- base_final$Int / base_final$MP
+base_final$IntPerMP <- round(base_final$IntPerMP,digits=2)
+base_final$IntPerMP <- ifelse(is.infinite(base_final$IntPerMP), NA, base_final$IntPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$Rcv <- base_final$Int + base_final$TklW
+base_final$Rcv <- round(base_final$Rcv,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$RcvPerMP <- base_final$Rcv / base_final$MP
+base_final$RcvPerMP <- round(base_final$RcvPerMP,digits=2)
+base_final$RcvPerMP <- ifelse(is.infinite(base_final$RcvPerMP), NA, base_final$RcvPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$ADWPerMP <- base_final$ADW / base_final$MP
+base_final$ADWPerMP <- round(base_final$ADWPerMP,digits=2)
+base_final$ADWPerMP <- ifelse(is.infinite(base_final$ADWPerMP), NA, base_final$ADWPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$ADWPerc <- base_final$ADW / (base_final$ADW + base_final$ADL)
+base_final$ADWPerc <- round(base_final$ADWPerc,digits=2)
+base_final$ADWPerc <- ifelse(is.infinite(base_final$ADWPerc), NA, base_final$ADWPerc)
+base_final[is.na(base_final)] = 0
+
+base_final$AD <- base_final$ADW + base_final$ADL
+base_final$AD <- round(base_final$AD,digits=2)
+base_final[is.na(base_final)] = 0
+
+base_final$ADPerMP <- base_final$AD / base_final$MP
+base_final$ADPerMP <- round(base_final$ADPerMP,digits=2)
+base_final$ADPerMP <- ifelse(is.infinite(base_final$ADPerMP), NA, base_final$ADPerMP)
+base_final[is.na(base_final)] = 0
+
+base_final$xAPerMP <- base_final$xA / base_final$MP
+base_final$xAPerMP <- round(base_final$xAPerMP,digits=2)
+base_final$xAPerMP <- ifelse(is.infinite(base_final$xAPerMP), NA, base_final$xAPerMP)
+base_final[is.na(base_final)] = 0
+
+### TRANSFORMAR COLUMNAS CON TEXTOS QUE INCLUYAN CARACTERES ESPECIALES
+base_final$Team <- stri_trans_general(base_final$Team,"Latin-ASCII")
+
+### ALMACENAR TABLA FINAL DE FBREF EQUIPOS DEL AÑO ACTUALIZADO EN UN CSV A NIVEL LOCAL
+write.csv(base_final,"C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Big7_teams_2023.csv", row.names = FALSE)
+
+### SOBREESCRIBIR TABLA FINAL DE FBREF EQUIPOS DEL AÑO EN MYSQL WORKBENCH A NIVEL LOCAL
+dbWriteTable(mysqlconnection2, value = base_final, row.names = FALSE, name = "big7_teams_2023", overwrite = TRUE)
+dbWriteTable(con_tfm, value = base_final, row.names = FALSE, name = "big7_teams_2023", overwrite = TRUE)
+
+### LEER TODOS LOS ARCHIVOS DE FBREF EQUIPOS POR AÑO EN TABLAS DENTRO DE R
+#Big7_teams_2019 <- read.csv("C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Big7_teams_2019.csv")
+#Big7_teams_2020 <- read.csv("C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Big7_teams_2020.csv")
+Big7_teams_2021 <- read.csv("C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Big7_teams_2021.csv")
+Big7_teams_2022 <- read.csv("C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Big7_teams_2022.csv")
+Big7_teams_2023 <- read.csv("C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Big7_teams_2023.csv")
+
+### CONCATENAR LOS ARCHIVOS PARA CREAR UN ARCHIVO FINAL TOTAL
+#Big7_teams = bind_rows(Big7_teams_2019,Big7_teams_2020)
+#Big7_teams = bind_rows(Big7_teams,Big7_teams_2021)
+Big7_teams = bind_rows(Big7_teams_2021,Big7_teams_2022)
+Big7_teams = bind_rows(Big7_teams,Big7_teams_2023)
+
+### ALMACENAR TABLA FINAL DE FBREF EQUIPOS EN UN CSV A NIVEL LOCAL
+write.csv(Big7_teams,"C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Big7_Teams.csv", row.names = FALSE)
+
+### SOBREESCRIBIR TABLA FINAL DE FBREF EQUIPOS EN MYSQL WORKBENCH A NIVEL LOCAL
+dbWriteTable(mysqlconnection2, value = Big7_teams, row.names = FALSE, name = "big7_teams", overwrite = TRUE)
+dbWriteTable(con_tfm, value = Big7_teams, row.names = FALSE, name = "big7_teams", overwrite = TRUE)
+
+### LIMPIAR ECOSISTEMA Y CONSUMO
+#rm(list = ls(all.names = TRUE))
+#gc()
+
+
+### CARGAR TODAS LAS LIBRERIAS QUE SE PODRIAN UTILIZAR
+library(ggplot2)
+require(ggrepel)
+require(jsonlite)
+library(readxl)
+library(rvest)
+library(dplyr)
+library(stringr)
+library(readxl)
+library(worldfootballR)
+library(magrittr)
+library(rlang)
+library(stringi)
+library(DBI)
+library(RMySQL)
+library(shiny)
+library(shinyWidgets)
+library(tidyr)
+library(grid)
+library(forcats)
+library(gridExtra)
+library(cowplot)
+library(shinydisconnect)
+library(shinycssloaders)
+library(ggtext)
+library(png)
+library(DT)
+library(lubridate)
+library(purrr) # v. 0.3.4
+library(lme4) # v. 1.1-23
+
+### ACCESOS A MYSQL WORKBENCH PARA ALMACENAR BASES DE DATOS"
+mysqlconnection2 = dbConnect(RMySQL::MySQL(),
+                             dbname='big7',
+                             host='localhost',
+                             port=3306,
+                             user='root',
+                             password='jurgen96')
+
+### DAR PERMISOS PARA EDITAR EL SCHEMA EN MYSQL WORKBENCH
+dbSendQuery(mysqlconnection2, "SET GLOBAL local_infile = true;") 
+
+### VER TODAS LAS TABLAS QUE ACTUALMENTE TIENE EL SCHEMA
+dbListTables(mysqlconnection2)
+
+### LEER ARCHIVO CON TODOS LOS JUGADORES OBTENIDOS DE FBREF
+Players <- read.csv("C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Big7_players.csv")
+
+### LEER ARCHIVO MAESTRO DE JUGADORES
+Players_Master <- read_excel("C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Players_Master.xlsx")
+
+### LEER ARCHIVO MAESTRO DE EQUIPOS
+Teams_Master <- read_excel("C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Teams_Master.xlsx")
+
+### SELECCIONAR COLUMNAS DESEADAS
+Players <- subset( Players, select = c(Player_Name,PlayerURL) )
+
+### IDENTIFICAR JUGADORES QUE NO SE ENCUENTRAN EN EL MAESTRO DE JUGADORES
+Players_not_master <- Players %>%
+  anti_join(Players_Master,by=c('PlayerURL'='UrlFBref'))
+
+### ALMACENAR TABLA FINAL DE JUGADORES QUE NO ESTAN EN EL MAESTRO EN UN CSV A NIVEL LOCAL (para actualizarlo manualmente)
+write.csv(Players_not_master,"C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Players_not_Master.csv", row.names = FALSE)
+
+### RECOLECTAR INFORMACION DESDE TRANSFERMARKT DE LOS JUGADORES QUE ESTAN EN EL MAESTRO
+links = c()
+# primer bucle para conseguir los URLs de todos los jugadores
+for (i in 1:length(Players_Master$UrlTmarkt)) {
+  link1 <- Players_Master$UrlTmarkt[[i]]
+  links <- c(links,link1)
+  i = i+1
+}
+
+
+k=1
+tm_player_bio2 <- possibly(tm_player_bio, otherwise = NULL)
+# segundo bucle para recolectar informacion de Transfermarkt a partir de los URLs
+for (j in 1:length(links)) {
+  # hago un print para ver el avance
+  print(j)
+  print(links[j])
+  Sys.sleep(5)
+  a = tm_player_bio2(player_url = links[j])
+  # hago un print para ver el avance
+  print("OK")
+  if (j == 1) {
+    data = a
+  } else {
+    if (is.null(a)) {
+      data = data
+    } else{ 
+      data = bind_rows(data,a)
+    }
+  }
+  j = j + 1
+}
+
+### TRANSFORMAR COLUMNAS CON TEXTOS QUE INCLUYAN CARACTERES ESPECIALES
+data$player_name <- stri_trans_general(data$player_name,"Latin-ASCII")
+data$place_of_birth <- stri_trans_general(data$place_of_birth,"Latin-ASCII")
+data$citizenship <- stri_trans_general(data$citizenship,"Latin-ASCII")
+data$current_club <- stri_trans_general(data$current_club,"Latin-ASCII")
+data$on_loan_from <- stri_trans_general(data$on_loan_from,"Latin-ASCII")
+data$full_name <- stri_trans_general(data$full_name,"Latin-ASCII")
+
+### TRANSFORMAR COLUMNA DE POSICIONES A ESPAÑOL
+data$position[data$position == 'Attack'] <- 'Atacante-No definido'
+data$position[data$position == 'Attack - Centre-Forward'] <- 'Atacante-Delantero Centro'
+data$position[data$position == 'Attack - Left Winger'] <- 'Atacante-Extremo Izquierdo'
+data$position[data$position == 'Attack - Right Winger'] <- 'Atacante-Extremo Derecho'
+data$position[data$position == 'Attack - Second Striker'] <- 'Atacante-Segundo Delantero'
+data$position[data$position == 'Defender'] <- 'Defensor-No definido'
+data$position[data$position == 'Defender - Centre-Back'] <- 'Defensor-Defensa Central'
+data$position[data$position == 'Defender - Left-Back'] <- 'Defensor-Lateral Izquierdo'   
+data$position[data$position == 'Defender - Right-Back'] <- 'Defensor-Lateral Derecho'
+data$position[data$position == 'Goalkeeper'] <- 'Portero-Portero'
+data$position[data$position == 'midfield'] <- 'Mediocampista-No definido'
+data$position[data$position == 'midfield - Attacking Midfield'] <- 'Mediocampista-Mediapunta'
+data$position[data$position == 'midfield - Central Midfield'] <- 'Mediocampista-Mediocentro'
+data$position[data$position == 'midfield - Defensive Midfield'] <- 'Mediocampista-Pivote Defensivo'
+data$position[data$position == 'midfield - Left Midfield'] <- 'Mediocampista-Volante Izquierdo'
+data$position[data$position == 'midfield - Right Midfield'] <- 'Mediocampista-Volante Derecho'
+data$position[data$position == 'NA'] <- 'No definido-No definido'
+
+### SEPARAR COLUMNA DE POSICIONES EN DOS COLUMNAS
+data[c('general_position', 'detailed_position')] <- str_split_fixed(data$position, '-', 2)
+
+### ALMACENAR TABLA FINAL DE INFORMACION DE TRANSFERMARKT EN UN CSV A NIVEL LOCAL
+write.csv(data,"C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Transfermarket.csv", row.names = FALSE)
+
+### ALMACENAR TABLA FINAL DE MAESTRO DE JUGADORES EN UN CSV A NIVEL LOCAL
+write.csv(Players_Master,"C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Players_Master.csv", row.names = FALSE)
+
+### ALMACENAR TABLA FINAL DE MAESTRO DE EQUIPOS EN UN CSV A NIVEL LOCAL
+write.csv(Teams_Master,"C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Teams_Master.csv", row.names = FALSE)
+
+### SOBREESCRIBIR TABLA FINAL DE INFORMACION DE TRANSFERMARKT EN MYSQL WORKBENCH A NIVEL LOCAL
+dbWriteTable(mysqlconnection2, value = data, row.names = FALSE, name = "transfermarket", overwrite = TRUE)
+dbWriteTable(con_tfm, value = data, row.names = FALSE, name = "transfermarket", overwrite = TRUE)
+
+### SOBREESCRIBIR TABLA FINAL DE MAESTRO DE JUGADORES EN MYSQL WORKBENCH A NIVEL LOCAL
+dbWriteTable(mysqlconnection2, value = Players_Master, row.names = FALSE, name = "players_master", overwrite = TRUE)
+dbWriteTable(con_tfm, value = Players_Master, row.names = FALSE, name = "players_master", overwrite = TRUE)
+
+### SOBREESCRIBIR TABLA FINAL DE MAESTRO DE EQUIPOS EN MYSQL WORKBENCH A NIVEL LOCAL
+dbWriteTable(mysqlconnection2, value = Teams_Master, row.names = FALSE, name = "teams_master", overwrite = TRUE)
+dbWriteTable(con_tfm, value = Teams_Master, row.names = FALSE, name = "teams_master", overwrite = TRUE)
+
+# fbref_players_and_transfermarkt <- Big7_players %>%
+#   left_join(Players_Master,by=c('PlayerURL'='UrlFBref')) %>%
+#   left_join(data,by=c('UrlTmarkt'='URL')) %>%
+#   arrange(PlayerURL_Season) %>%
+#   subset(select = -c(Position,name_in_home_country,place_of_birth,age,citizenship,position,player_agent,joined,
+#                      instagram,max_player_valuation,max_player_valuation_date,na,on_loan_from,contract_there_expires,
+#                      date_of_last_contract_extension,outfitter,twitter,contract_option,facebook,x2nd_club,full_name,
+#                      tik_tok,website,x3nd_club,twitter_hashtag,date_of_death,x4nd_club))
+# names(fbref_players_and_transfermarkt)[3] <- c("club_on_period")
+# names(fbref_players_and_transfermarkt)[213] <- c("Player_Name_Trmkt")
+# names(fbref_players_and_transfermarkt)[217] <- c("club_current")
+# write.csv(fbref_players_and_transfermarkt,"C:/Users/jur21/iCloudDrive/Desktop/BASES_FUTBOL/Big7_players_consolidado.csv", row.names = FALSE)
+
